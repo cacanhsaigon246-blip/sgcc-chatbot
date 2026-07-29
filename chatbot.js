@@ -29,6 +29,7 @@ let state = {
 
 // ─── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  localStorage.removeItem('sgcc_guest_count'); // Dọn dẹp rác giới hạn cũ
   createOceanAnimations();
   initGoogleSignIn();
   loadProductsFromStorage();
