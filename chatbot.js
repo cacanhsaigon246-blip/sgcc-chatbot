@@ -249,17 +249,18 @@ function saveChatLog(user, question, answer) {
   localStorage.setItem('sgcc_chat_logs', JSON.stringify(logs));
 }
 
-// ─── SMART FALLBACK TỪ KHO KIẾN THỨC ───────────────────────
+// ─── SMART FALLBACK TỪ KHO KIẾN THỨC (CẤU TRÚC 3 PHẦN: ADSENSE + SHOPEE) ────
 function searchSmartFallback(query) {
+  const lowerQ = query.toLowerCase();
   if (typeof KNOWLEDGE_BASE !== 'undefined' && KNOWLEDGE_BASE.articles) {
     const match = KNOWLEDGE_BASE.articles.find(a => 
-      query.toLowerCase().split(' ').some(w => w.length > 3 && a.title.toLowerCase().includes(w))
+      lowerQ.split(' ').some(w => w.length > 2 && a.title.toLowerCase().includes(w))
     );
     if (match) {
-      return `Dạ về **${match.title}**, em xin tư vấn nhanh cho anh ạ:\n\n${match.summary}\n\n👉 Anh nhắn Zalo **0938604144** để em tư vấn chi tiết hơn nhé!`;
+      return `Dạ về **${match.title}**, em xin tóm tắt giải pháp nhanh cho anh ạ:\n\n${match.summary}\n\n📖 **Anh/chị xem hướng dẫn chi tiết từng bước tại bài viết này nhé:**\n👉 [${match.title}](${match.url || 'https://saigoncacanh.com'})\n\n🛍️ **Anh/chị có thể tham khảo mua sản phẩm chính hãng giao nhanh tại Siêu thị Shopee:**\n👉 [Siêu Thị Sản Phẩm Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)`;
     }
   }
-  return `Dạ về câu hỏi của anh: "*${query}*", em xin ghi nhận lại ạ! 🐟\n\nShop Sài Gòn Cá Cảnh chuyên cá cảnh, phụ kiện, thức ăn, thuốc và vật liệu lọc. Anh có thể nhắn Zalo **0938604144** hoặc gọi Hotline để Anh Phát hỗ trợ trực tiếp ngay nhé ạ!\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Với Anh Phát (0938604144)</a></div>`;
+  return `Dạ về câu hỏi của anh: "*${query}*", em xin tư vấn giải pháp nhanh cho anh ạ! 🐟\n\n- Với các dòng cá cảnh, thức ăn và phụ kiện, anh có thể tham khảo bài viết hướng dẫn trên website chính:\n👉 📖 [Xem bài viết hướng dẫn nuôi cá tại saigoncacanh.com](https://saigoncacanh.com)\n\n- Để xem giá và đặt mua sản phẩm/thuốc chữa bệnh giao nhanh trên Shopee:\n👉 🛍️ [Ghé Siêu Thị Shopee Affiliate Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Trực Tiếp Với Anh Phát (0938604144)</a></div>`;
 }
 
 function sendQuickReply(text) {
@@ -278,10 +279,21 @@ async function callBackendSSE(message) {
   const headers = { 'Content-Type': 'application/json' };
   if (userApiKey) headers['X-Gemini-Key'] = userApiKey;
 
+  const systemInstruction = `Bạn là trợ lý AI chuyên nghiệp của Sài Gòn Cá Cảnh (saigoncacanh.com).
+MỤC TIÊU CHIẾN LƯỢC:
+1. Trả lời tóm tắt nhanh giải pháp trong 2-3 dòng bằng tiếng Việt thân thiện (xưng em, gọi anh).
+2. LUÔN CHÈN LINK BÀI VIẾT trên saigoncacanh.com để khách click vào đọc bài chi tiết (giúp kéo Traffic & tăng doanh thu Google AdSense).
+3. KHÔNG chốt đơn hay báo giá trực tiếp. Nếu khách hỏi mua sản phẩm/thức ăn/thuốc/vật liệu lọc, gợi ý khách mua tại Siêu thị Shopee Affiliate: https://shop.saigoncacanh.com hoặc nhắn Zalo 0938604144.
+
+Cấu trúc câu trả lời chuẩn 3 phần:
+- 📖 Tóm tắt giải pháp 2-3 dòng.
+- 🔗 "Anh/chị xem hướng dẫn chi tiết từng bước tại bài viết này nhé: [Link bài viết trên saigoncacanh.com]"
+- 🛍️ "Anh/chị có thể tham khảo mua sản phẩm chính hãng giao nhanh tại Siêu thị Shopee: https://shop.saigoncacanh.com"`;
+
   const contents = [
     {
       role: 'user',
-      parts: [{ text: `Bạn là trợ lý AI chuyên nghiệp của Sài Gòn Cá Cảnh (saigoncacanh.com). Hãy tư vấn câu hỏi sau bằng tiếng Việt thân thiện, nhiệt tình (xưng em, gọi anh):\n\n${message}` }]
+      parts: [{ text: `${systemInstruction}\n\nCâu hỏi của khách: ${message}` }]
     }
   ];
 
