@@ -188,54 +188,54 @@ async function sendMessage() {
   const hasImage = !!state.pendingImage;
 
   if (!text && !hasImage) return;
-  if (state.isTyping) return;
-  if (!checkMessageLimit()) return;
 
-  // Add user message to UI
-  const displayText = text || '📷 [Ảnh cá bệnh]';
-  addUserMessage(displayText, state.pendingImage);
-
-  // Prepare message text
-  let messageText = text;
-  if (!text && hasImage) messageText = 'Đây là ảnh cá của em, anh xem giúp em cá bị bệnh gì không ạ?';
-
-  // Clear input
-  input.value = '';
-  autoResize(input);
-  hideQuickReplies();
-  incrementGuestCount();
-
-  // Clear pending image
-  removeImage();
-
-  // Show typing
-  showTyping();
   state.isTyping = true;
-
-  // Check Handoff Zalo
-  const lowerText = messageText.toLowerCase();
-  if (lowerText.includes('tư vấn viên') || lowerText.includes('anh phát') || lowerText.includes('chủ shop') || lowerText.includes('người thật') || lowerText.includes('gặp nhân viên') || lowerText.includes('trực tiếp')) {
-    hideTyping();
-    addBotMessage(`Dạ em chuyển kết nối đến **Anh Phát — Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo trực tiếp với Anh Phát (0938604144) chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Với Anh Phát (0938604144)</a></div>`);
-    saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Anh Phát 0938604144');
-    state.isTyping = false;
-    return;
-  }
+  const sendBtn = document.getElementById('send-btn');
+  if (sendBtn) sendBtn.disabled = true;
 
   try {
-    const reply = await callBackendSSE(messageText);
+    // Add user message to UI
+    const displayText = text || '📷 [Ảnh cá bệnh]';
+    addUserMessage(displayText, state.pendingImage);
+
+    // Prepare message text
+    let messageText = text;
+    if (!text && hasImage) messageText = 'Đây là ảnh cá của em, anh xem giúp em cá bị bệnh gì không ạ?';
+
+    // Clear input
+    input.value = '';
+    autoResize(input);
+    hideQuickReplies();
+    removeImage();
+    showTyping();
+
+    // Check Handoff Zalo
+    const lowerText = messageText.toLowerCase();
+    if (lowerText.includes('tư vấn viên') || lowerText.includes('anh phát') || lowerText.includes('chủ shop') || lowerText.includes('người thật') || lowerText.includes('gặp nhân viên') || lowerText.includes('trực tiếp')) {
+      hideTyping();
+      addBotMessage(`Dạ em chuyển kết nối đến **Anh Phát — Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo trực tiếp với Anh Phát (0938604144) chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Với Anh Phát (0938604144)</a></div>`);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Anh Phát 0938604144');
+      return;
+    }
+
+    try {
+      const reply = await callBackendSSE(messageText);
+      hideTyping();
+      findAndShowArticle(reply, messageText);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply);
+    } catch (err) {
+      hideTyping();
+      const smartReply = searchSmartFallback(messageText);
+      addBotMessage(smartReply);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, smartReply);
+    }
+  } catch (e) {
+    console.error('Send message error:', e);
     hideTyping();
-    findAndShowArticle(reply, text);
-    saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply);
-  } catch (err) {
-    hideTyping();
-    // Smart Fallback từ Knowledge Base nếu API bị gián đoạn
-    const smartReply = searchSmartFallback(messageText);
-    addBotMessage(smartReply);
-    saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, smartReply);
+    addBotMessage(searchSmartFallback(text));
   } finally {
     state.isTyping = false;
-    document.getElementById('send-btn').disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
   }
 }
 
