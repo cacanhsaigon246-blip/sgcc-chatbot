@@ -272,60 +272,39 @@ function insertQuestion(text) {
   document.getElementById('user-input').focus();
 }
 
-// ─── BACKEND V4.2 — SSE STREAMING CALL ───────────────────────
+// ─── BACKEND CALL VIA PROXY.PHP ───────────────────────────────
 async function callBackendSSE(message) {
-  // Chuẩn bị history gửi lên server (giữ 15 tin gần nhất)
-  const trimmedHistory = state.chatHistory.slice(-(CONFIG.MAX_HISTORY));
+  const userApiKey = localStorage.getItem('sgcc_api_key') || '';
+  const headers = { 'Content-Type': 'application/json' };
+  if (userApiKey) headers['X-Gemini-Key'] = userApiKey;
 
-  const res = await fetch(`${CONFIG.API_BASE_URL}/api/chat`, {
+  const contents = [
+    {
+      role: 'user',
+      parts: [{ text: `Bạn là trợ lý AI chuyên nghiệp của Sài Gòn Cá Cảnh (saigoncacanh.com). Hãy tư vấn câu hỏi sau bằng tiếng Việt thân thiện, nhiệt tình (xưng em, gọi anh):\n\n${message}` }]
+    }
+  ];
+
+  const res = await fetch(`proxy.php`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      history: trimmedHistory,
-      message: message
-    })
+    headers: headers,
+    body: JSON.stringify({ contents: contents })
   });
 
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
 
-  // Đọc SSE stream real-time
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
+  const data = await res.json();
   let fullReply = '';
-  const msgId = 'msg-' + Date.now();
+  if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+    fullReply = data.candidates[0].content.parts[0].text;
+  } else if (data.error) {
+    throw new Error(typeof data.error === 'string' ? data.error : (data.error.message || 'Lỗi API'));
+  }
 
-  // Tạo khung tin nhắn bot trống để streaming vào
-  hideTyping();
-  createStreamingBubble(msgId);
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split('\n');
-
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const dataStr = line.slice(6).trim();
-      if (dataStr === '[DONE]') break;
-
-      try {
-        const parsed = JSON.parse(dataStr);
-        if (parsed.text) {
-          fullReply += parsed.text;
-          updateStreamingBubble(msgId, fullReply);
-        }
-        if (parsed.error) {
-          throw new Error(parsed.error);
-        }
-      } catch (e) {
-        // Bỏ qua dòng JSON dở dang
-        if (e.message && !e.message.includes('JSON')) throw e;
-      }
-    }
+  if (!fullReply) {
+    throw new Error('Empty reply');
   }
 
   // Lưu vào history
