@@ -460,7 +460,7 @@ body {
 #user-input::-webkit-scrollbar { width: 3px; }
 #user-input::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-.input-actions { display: flex; align-items: flex-end; gap: 6px; }
+.input-actions { display: flex; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 
 .btn-attach {
   width: 36px; height: 36px;

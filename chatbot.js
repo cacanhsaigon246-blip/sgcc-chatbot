@@ -12,7 +12,6 @@ const CONFIG = {
   BOT_NAME: 'Sài Gòn Cá Cảnh',
   SHOP_URL: 'https://saigoncacanh.com',
   ZALO_URL: 'https://zalo.me/0938604144',
-  HOTLINE: '0938604144',
   MAX_HISTORY: 15, // Giữ 15 tin nhắn gần nhất gửi lên server
 };
 
@@ -284,7 +283,7 @@ async function callBackendSSE(message) {
 MỤC TIÊU CHIẾN LƯỢC:
 1. Trả lời tóm tắt nhanh giải pháp trong 2-3 dòng bằng tiếng Việt thân thiện (xưng em, gọi anh).
 2. LUÔN CHÈN LINK BÀI VIẾT trên saigoncacanh.com để khách click vào đọc bài chi tiết (giúp kéo Traffic & tăng doanh thu Google AdSense).
-3. KHÔNG chốt đơn hay báo giá trực tiếp. Nếu khách hỏi mua sản phẩm/thức ăn/thuốc/vật liệu lọc, gợi ý khách mua tại Siêu thị Shopee Affiliate: https://shop.saigoncacanh.com hoặc nhắn Zalo 0938604144.
+3. KHÔNG chốt đơn hay báo giá trực tiếp. Nếu khách hỏi mua sản phẩm/thức ăn/thuốc/vật liệu lọc, gợi ý khách mua tại Siêu thị Shopee Affiliate: https://shop.saigoncacanh.com hoặc nhắn liên hệ Zalo Shop.
 
 Cấu trúc câu trả lời chuẩn 3 phần:
 - 📖 Tóm tắt giải pháp 2-3 dòng.
@@ -368,11 +367,11 @@ function formatPrice(p) {
 
 function handleError(err) {
   const msg = err.message || '';
-  if (msg.includes('429') || msg.includes('quá nhanh')) return '⏳ Anh ơi, hệ thống đang bận ạ. Anh thử lại sau vài giây nhé! Hoặc liên hệ Zalo 0938604144 ạ.';
+  if (msg.includes('429') || msg.includes('quá nhanh')) return '⏳ Anh ơi, hệ thống đang bận ạ. Anh thử lại sau vài giây nhé! Hoặc liên hệ Zalo Shop ạ.';
   if (msg.includes('Failed to fetch') || msg.includes('network')) return '🌐 Mất kết nối mạng rồi anh ơi! Anh kiểm tra wifi/4G rồi thử lại nhé ạ.';
   if (msg.includes('500')) return '🔧 Server đang bảo trì anh ạ. Anh thử lại sau vài phút nhé!';
   console.error('Backend error:', err);
-  return `❌ Có lỗi xảy ra rồi anh ơi!\n\nAnh liên hệ Zalo **0938604144** để em hỗ trợ trực tiếp ạ!`;
+  return `❌ Có lỗi xảy ra rồi anh ơi!\n\nAnh liên hệ trực tiếp **Zalo Shop** để em hỗ trợ nhé ạ!`;
 }
 
 // ─── UI — MESSAGES ────────────────────────────────────────────
