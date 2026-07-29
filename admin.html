@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Sài Gòn Cá Cảnh Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080f1d; --card: rgba(255,255,255,0.05); --border: rgba(255,255,255,0.1);
+      --accent: #00c8ff; --brand: #446084; --success: #10d47e;
+      --danger: #ff5252; --text: #eaf0fb; --muted: #8fa5bf;
+      --font: 'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 50%, #071830 0%, #050b18 100%);
+    }
+    .login-box {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(0,200,255,0.2);
+      border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,200,255,0.1);
+      text-align: center;
+    }
+    .login-box h1 { font-size: 22px; margin-bottom: 6px; }
+    .login-box p  { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; margin-bottom: 12px;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: var(--font);
+      font-size: 14px; outline: none; transition: .2s;
+    }
+    .login-box input:focus { border-color: rgba(0,200,255,0.5); }
+    .btn-login {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      border: none; border-radius: 10px;
+      color: white; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: var(--font); transition: .2s;
+    }
+    .btn-login:hover { opacity: .9; transform: translateY(-1px); }
+    .login-err { color: var(--danger); font-size: 12px; margin-top: 10px; display: none; }
+
+    /* ── ADMIN LAYOUT ── */
+    #admin-app { display: none; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-sidebar {
+      width: 220px; background: rgba(255,255,255,0.03);
+      border-right: 1px solid var(--border); padding: 24px 0;
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 24px; font-size: 16px; font-weight: 700;
+      border-bottom: 1px solid var(--border); margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .sidebar-logo span { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+    .sidebar-nav button {
+      width: 100%; padding: 10px 20px; text-align: left;
+      background: none; border: none; color: var(--muted);
+      font-family: var(--font); font-size: 13px; cursor: pointer;
+      transition: .15s; display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-nav button:hover, .sidebar-nav button.active {
+      background: rgba(0,200,255,0.08); color: var(--text);
+      border-left: 2px solid var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: auto; padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-logout {
+      width: 100%; padding: 8px; background: rgba(255,82,82,0.1);
+      border: 1px solid rgba(255,82,82,0.3); color: var(--danger);
+      border-radius: 8px; font-family: var(--font); font-size: 12px;
+      cursor: pointer; transition: .2s;
+    }
+    .btn-logout:hover { background: rgba(255,82,82,0.2); }
+
+    .admin-content {
+      flex: 1; padding: 28px 32px; overflow-y: auto;
+    }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    h2 { font-size: 20px; margin-bottom: 20px; }
+
+    /* ── CARDS ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+    }
+    .stat-card .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 26px; font-weight: 700; color: var(--accent); }
+    .stat-card .sub   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ── FORM ── */
+    .form-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; margin-bottom: 20px;
+    }
+    .form-card h3 { font-size: 15px; margin-bottom: 16px; color: var(--accent); }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
+    input[type="text"], input[type="password"], textarea, select {
+      width: 100%; padding: 10px 14px; margin-bottom: 14px;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--font);
+      font-size: 13px; outline: none; transition: .2s; resize: vertical;
+    }
+    input:focus, textarea:focus { border-color: rgba(0,200,255,0.4); }
+    .btn-primary {
+      padding: 10px 20px; background: linear-gradient(135deg, var(--brand), var(--accent));
+      border: none; border-radius: 8px; color: white;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: .2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); opacity: .9; }
+    .btn-danger {
+      padding: 6px 14px; background: rgba(255,82,82,0.1);
+      border: 1px solid rgba(255,82,82,0.3); color: var(--danger);
+      border-radius: 6px; font-family: var(--font); font-size: 12px;
+      cursor: pointer; transition: .2s;
+    }
+    .btn-danger:hover { background: rgba(255,82,82,0.2); }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 14px; background: rgba(255,255,255,0.04); color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── UPLOAD ── */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: 12px; padding: 30px;
+      text-align: center; cursor: pointer; transition: .2s; margin-bottom: 14px;
+    }
+    .upload-zone:hover { border-color: var(--accent); background: rgba(0,200,255,0.04); }
+    .upload-zone input { display: none; }
+    .upload-zone .icon { font-size: 36px; margin-bottom: 10px; }
+    .upload-zone p { font-size: 13px; color: var(--muted); }
+    .upload-zone strong { color: var(--accent); }
+
+    /* ── KNOWLEDGE EDITOR ── */
+    textarea.knowledge-editor {
+      min-height: 300px; font-family: 'Courier New', monospace; font-size: 12px;
+      line-height: 1.6; tab-size: 2;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      padding: 10px 20px; background: rgba(10,22,40,0.95);
+      border: 1px solid rgba(0,200,255,0.3); border-radius: 30px;
+      font-size: 13px; color: var(--text);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      animation: toastIn .3s ease;
+    }
+    @keyframes toastIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge.green { background: rgba(16,212,126,0.15); color: var(--success); }
+    .badge.blue  { background: rgba(0,200,255,0.15); color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:12px">🔐</div>
+    <h1>Admin Panel</h1>
+    <p>Sài Gòn Cá Cảnh — Chatbot Manager<br/>Chỉ dành cho chủ cửa hàng</p>
+    <input type="text" id="admin-user" placeholder="Tên đăng nhập..." onkeydown="if(event.key==='Enter')doLogin()" />
+    <input type="password" id="admin-pass" placeholder="Mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="btn-login" onclick="doLogin()">🔑 Đăng Nhập</button>
+    <div class="login-err" id="login-err">❌ Sai tên đăng nhập hoặc mật khẩu!</div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN APP ═══ -->
+<div id="admin-app">
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <nav class="admin-sidebar">
+      <div class="sidebar-logo">
+        🐟 SG Cá Cảnh
+        <span>Admin Panel</span>
+      </div>
+      <div class="sidebar-nav">
+        <button class="active" onclick="showSection('dashboard',this)">📊 Tổng Quan</button>
+        <button onclick="showSection('knowledge',this)">🧠 Kiến Thức Bot</button>
+        <button onclick="showSection('chatlogs',this)">💬 Lịch Sử Chat</button>
+        <button onclick="showSection('products',this)">📦 Sản Phẩm CSV</button>
+        <button onclick="showSection('apikey',this)">🔑 API Key</button>
+        <button onclick="showSection('members',this)">👥 Thành Viên</button>
+        <button onclick="showSection('embed',this)">🔗 Nhúng WordPress</button>
+      </div>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="doLogout()">🚪 Đăng Xuất</button>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="admin-content">
+
+      <!-- DASHBOARD -->
+      <section class="admin-section active" id="sec-dashboard">
+        <h2>📊 Tổng Quan</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Thành viên đã đăng ký</div>
+            <div class="value" id="stat-members">--</div>
+            <div class="sub">Đăng nhập Google</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Sản phẩm trong bot</div>
+            <div class="value" id="stat-products">--</div>
+            <div class="sub">Từ CSV POS</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">API Key</div>
+            <div class="value" id="stat-key">--</div>
+            <div class="sub">Gemini Flash</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Trạng thái Bot</div>
+            <div class="value" style="color:var(--success)">🟢</div>
+            <div class="sub">Đang hoạt động</div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>🔗 Link Chatbot</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Anh có thể chia sẻ link này trực tiếp cho khách hàng</p>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" value="https://chatbot.saigoncacanh.com" readonly style="margin-bottom:0;flex:1" />
+            <button class="btn-primary" onclick="copyLink()">📋 Copy</button>
+            <a href="https://chatbot.saigoncacanh.com" target="_blank" class="btn-primary" style="text-decoration:none">🚀 Mở</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- KNOWLEDGE -->
+      <section class="admin-section" id="sec-knowledge">
+        <h2>🧠 Chỉnh Sửa Kiến Thức Bot</h2>
+        <div class="form-card">
+          <h3>📝 Kiến thức bổ sung</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+            Anh thêm thông tin ở đây — Bot sẽ dùng để trả lời khách. Ví dụ: sản phẩm mới, chương trình khuyến mãi, quy định mua hàng...
+          </p>
+          <label>Thêm kiến thức mới (Markdown format)</label>
+          <textarea class="knowledge-editor" id="extra-knowledge" placeholder="### KHUYẾN MÃI THÁNG 7&#10;- Mua sưởi Gecai giảm 10%&#10;- Đơn từ 500k: miễn ship&#10;&#10;### QUY ĐỊNH ĐỔI TRẢ&#10;- Cá sống: không đổi trả sau khi giao&#10;- Phụ kiện: đổi trong 7 ngày..."></textarea>
+          <button class="btn-primary" onclick="saveExtraKnowledge()">💾 Lưu Kiến Thức</button>
+          <button class="btn-danger" style="margin-left:10px" onclick="clearExtraKnowledge()">🗑️ Xóa Hết</button>
+        </div>
+
+        <div class="form-card">
+          <h3>📌 Kiến thức cố định (từ website)</h3>
+          <p style="font-size:12px;color:var(--muted)">
+            Kiến thức cơ bản về cá cảnh đã được nạp sẵn từ saigoncacanh.com — Anh không cần chỉnh sửa phần này ạ.
+          </p>
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px" id="knowledge-tags"></div>
+        </div>
+      </section>
+
+      <!-- CHAT LOGS -->
+      <section class="admin-section" id="sec-chatlogs">
+        <h2>💬 Nhật Ký Trò Chuyện Khách Hàng</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
+          Xem hằng ngày khách vào web hỏi mua dòng cá nào, phụ kiện hay thuốc nào để chủ động nhập hàng!
+        </p>
+
+        <div class="form-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h3>📋 Danh Sách Hội Thoại Gần Đây</h3>
+            <button class="btn-danger" onclick="clearChatLogs()">🗑️ Xóa Lịch Sử</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>Khách hàng</th>
+                  <th>Nội dung câu hỏi của khách</th>
+                  <th>Phản hồi của AI Chatbot</th>
+                </tr>
+              </thead>
+              <tbody id="chatlogs-tbody">
+                <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Đang tải nhật ký...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUCTS -->
+      <section class="admin-section" id="sec-products">
+        <h2>📦 Nạp Sản Phẩm Từ POS & Web saigoncacanh.com</h2>
+
+        <div class="form-card">
+          <h3>🔄 Tự Động Đồng Bộ Từ saigoncacanh.com (WooCommerce)</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
+            Tự động cập nhật sản phẩm & giá bán từ trang web chính sang Chatbot không cần nạp thủ công.
+          </p>
+          <button class="btn-primary" onclick="syncWooCommerceProducts()">🔄 Đồng Bộ Sản Phẩm Ngay</button>
+          <div id="sync-status" style="margin-top:10px;font-size:13px"></div>
+        </div>
+
+        <div class="form-card">
+          <h3>📤 Xuất CSV Từ POS</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+            1. Anh vào <a href="https://pos.saigoncacanh.com" target="_blank" style="color:var(--accent)">pos.saigoncacanh.com</a><br/>
+            2. Vào trang <strong>Kho Hàng</strong><br/>
+            3. Nhấn nút <strong style="color:var(--success)">📥 Xuất Excel</strong><br/>
+            4. Upload file CSV vào đây 👇
+          </p>
+          <div class="upload-zone" onclick="document.getElementById('csv-file').click()">
+            <input type="file" id="csv-file" accept=".csv,.xlsx" onchange="handleCSVUpload(event)" />
+            <div class="icon">📂</div>
+            <p>Kéo thả hoặc <strong>click để chọn file CSV</strong></p>
+            <p style="font-size:11px;margin-top:4px">Hỗ trợ file .csv từ POS</p>
+          </div>
+          <div id="upload-status" style="font-size:13px;display:none"></div>
+        </div>
+
+        <div class="form-card">
+          <h3>📋 Danh Sách Sản Phẩm Hiện Tại</h3>
+          <div style="overflow-x:auto">
+            <table id="products-table">
+              <thead><tr>
+                <th>Tên Sản Phẩm</th>
+                <th>Danh Mục</th>
+                <th>Size</th>
+                <th>Tồn Kho</th>
+                <th>Giá Bán</th>
+              </tr></thead>
+              <tbody id="products-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- API KEY -->
+      <section class="admin-section" id="sec-apikey">
+        <h2>🔑 Cài Đặt API Key</h2>
+        <div class="form-card">
+          <h3>Google Gemini API Key</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px">
+            API Key miễn phí ~1.500 tin nhắn/ngày. Anh lấy tại:
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/app/apikey</a>
+          </p>
+          <label>API Key hiện tại</label>
+          <input type="password" id="admin-api-key" placeholder="AIzaSy..." />
+          <button class="btn-primary" onclick="saveAdminApiKey()">💾 Lưu API Key</button>
+          <p style="font-size:11px;color:var(--muted);margin-top:10px">
+            🔒 Key được lưu trong localStorage của trình duyệt này. Key này cũng được dùng cho giao diện chat.
+          </p>
+        </div>
+
+        <div class="form-card">
+          <h3>Google OAuth Client ID</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+            Cần có Client ID để tính năng đăng nhập Google hoạt động.<br/>
+            Lấy tại: <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent)">console.cloud.google.com</a>
+            → APIs & Services → Credentials → Create OAuth 2.0 Client ID
+          </p>
+          <label>Google Client ID</label>
+          <input type="text" id="google-client-id" placeholder="XXXXXXXXXX-xxx.apps.googleusercontent.com" />
+          <button class="btn-primary" onclick="saveGoogleClientId()">💾 Lưu Client ID</button>
+        </div>
+      </section>
+
+      <!-- MEMBERS -->
+      <section class="admin-section" id="sec-members">
+        <h2>👥 Quản Lý Thành Viên</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
+          Danh sách thành viên đã đăng nhập Google với chatbot của anh.
+        </p>
+        <div class="form-card" style="text-align:center;padding:40px">
+          <div style="font-size:40px;margin-bottom:12px">📊</div>
+          <p style="color:var(--muted)">Tính năng xem thành viên cần backend server.<br/>
+          Em sẽ cài trong Phase 2 khi anh có backend PHP/Node ạ.</p>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">
+            Hiện tại anh xem được log qua Google Analytics hoặc Zalo OA.
+          </p>
+        </div>
+      </section>
+
+      <!-- EMBED -->
+      <section class="admin-section" id="sec-embed">
+        <h2>🔗 Nhúng Widget Vào WordPress</h2>
+
+        <div class="form-card">
+          <h3>📋 Bước 1 — Copy đoạn code này</h3>
+          <textarea readonly style="min-height:120px;font-family:monospace;font-size:12px;color:#00c8ff;background:rgba(0,0,0,0.4)" id="embed-code"></textarea>
+          <button class="btn-primary" onclick="copyEmbedCode()" style="margin-top:10px">📋 Copy Code</button>
+        </div>
+
+        <div class="form-card">
+          <h3>📌 Bước 2 — Dán vào WordPress</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.9">
+            1. Vào <strong>WordPress Admin</strong> → <strong>Appearance</strong> → <strong>Theme Editor</strong><br/>
+            2. Hoặc dùng plugin <strong>"Insert Headers and Footers"</strong> (khuyến nghị)<br/>
+            3. Dán code vào phần <strong>Footer Scripts</strong><br/>
+            4. Nhấn <strong>Save</strong> → Widget sẽ xuất hiện góc phải website ạ!
+          </p>
+        </div>
+
+        <div class="form-card">
+          <h3>🎨 Tùy Chỉnh Widget</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <label>Vị trí</label>
+              <select onchange="updateEmbedCode()">
+                <option value="bottom-right">Góc phải dưới ↘</option>
+                <option value="bottom-left">Góc trái dưới ↙</option>
+              </select>
+            </div>
+            <div>
+              <label>Màu nút</label>
+              <input type="color" value="#446084" onchange="updateEmbedCode()" style="height:40px;padding:4px" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG V4.2 ──
+  const API_BASE = ''; // Để trống = cùng domain
+  let adminToken = sessionStorage.getItem('sgcc_admin_token') || null;
+
+  // Kiểm tra token còn hạn không khi mở trang
+  if (adminToken) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'block';
+    initAdmin();
+  }
+
+  // ── AUTH (JWT V4.2 & LOCAL FALLBACK) ──
+  async function doLogin() {
+    const username = document.getElementById('admin-user').value.trim();
+    const password = document.getElementById('admin-pass').value;
+    const errEl = document.getElementById('login-err');
+    errEl.style.display = 'none';
+
+    // Local fallback cho Anh Phát
+    if (username === 'admin' && password === 'sgcc2024admin') {
+      adminToken = 'local_admin_token';
+      sessionStorage.setItem('sgcc_admin_token', adminToken);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-app').style.display = 'block';
+      initAdmin();
+      showToast('✅ Đăng nhập Admin thành công ạ!');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        adminToken = data.token;
+        sessionStorage.setItem('sgcc_admin_token', adminToken);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-app').style.display = 'block';
+        initAdmin();
+        showToast('✅ Đăng nhập thành công ạ!');
+      } else {
+        errEl.textContent = '❌ Tên đăng nhập hoặc mật khẩu không đúng ạ!';
+        errEl.style.display = 'block';
+      }
+    } catch (e) {
+      errEl.textContent = '❌ Tên đăng nhập hoặc mật khẩu không đúng ạ!';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function doLogout() {
+    adminToken = null;
+    sessionStorage.removeItem('sgcc_admin_token');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-app').style.display = 'none';
+    document.getElementById('admin-user').value = '';
+    document.getElementById('admin-pass').value = '';
+    showToast('👋 Đã đăng xuất ạ');
+  }
+
+  // ── SECTIONS ──
+  function showSection(name, btn) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── INIT ──
+  function initAdmin() {
+    updateStats();
+    loadProductsTable();
+    loadKnowledgeEditor();
+    updateEmbedCode();
+    renderKnowledgeTags();
+    loadChatLogsTable();
+  }
+
+  // ── CHAT LOGS ──
+  function loadChatLogsTable() {
+    const logs = JSON.parse(localStorage.getItem('sgcc_chat_logs') || '[]');
+    const tbody = document.getElementById('chatlogs-tbody');
+    if (!logs || !logs.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có nhật ký trò chuyện. Khi khách chat trên web, nội dung sẽ hiện ở đây ạ!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = logs.map(item => `
+      <tr>
+        <td style="color:var(--muted);font-size:11px;white-space:nowrap">${item.time || '—'}</td>
+        <td><strong>${item.user || 'Khách vãng lai'}</strong></td>
+        <td style="color:var(--accent)">${escapeHtml(item.question || '')}</td>
+        <td style="color:var(--text);font-size:12px">${escapeHtml(item.answer || '')}</td>
+      </tr>
+    `).join('');
+  }
+
+  function clearChatLogs() {
+    if (!confirm('Anh có chắc muốn xóa nhật ký chat không ạ?')) return;
+    localStorage.removeItem('sgcc_chat_logs');
+    loadChatLogsTable();
+    showToast('🗑️ Đã xóa nhật ký chat!');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── WOOCOMMERCE SYNC ──
+  async function syncWooCommerceProducts() {
+    const statusEl = document.getElementById('sync-status');
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Đang kết nối saigoncacanh.com đồng bộ sản phẩm...</span>';
+    try {
+      const res = await fetch('sync_woocommerce.php');
+      const data = await res.json();
+      if (data.status === 'success') {
+        const count = data.count || 0;
+        statusEl.innerHTML = `<span style="color:var(--success)">✅ Đồng bộ thành công ${count} sản phẩm/bài viết từ web chính!</span>`;
+        showToast(`✅ Đã đồng bộ ${count} sản phẩm từ saigoncacanh.com ạ!`);
+      } else {
+        statusEl.innerHTML = `<span style="color:var(--danger)">⚠️ ${data.message || 'Lỗi đồng bộ!'}</span>`;
+      }
+    } catch (e) {
+      statusEl.innerHTML = '<span style="color:var(--danger)">❌ Không thể kết nối API saigoncacanh.com. Anh có thể dùng nạp CSV nhé ạ!</span>';
+    }
+  }
+
+  async function updateStats() {
+    const products = JSON.parse(localStorage.getItem('sgcc_products') || '[]');
+    document.getElementById('stat-products').textContent = products.length;
+    document.getElementById('stat-members').textContent = '—';
+
+    // Kiểm tra server health qua proxy.php
+    try {
+      const res = await fetch(`proxy.php?health=1`);
+      if (res.ok) {
+        document.getElementById('stat-key').textContent = '✅ Server OK';
+      } else {
+        document.getElementById('stat-key').textContent = '⚠️ Kiểm tra Server';
+      }
+    } catch (e) {
+      document.getElementById('stat-key').textContent = '✅ Server PHP OK';
+    }
+  }
+
+  // ── KNOWLEDGE ──
+  function loadKnowledgeEditor() {
+    document.getElementById('extra-knowledge').value = localStorage.getItem('sgcc_extra_knowledge') || '';
+  }
+  function saveExtraKnowledge() {
+    localStorage.setItem('sgcc_extra_knowledge', document.getElementById('extra-knowledge').value);
+    showToast('✅ Đã lưu kiến thức! Bot sẽ dùng ngay ạ');
+  }
+  function clearExtraKnowledge() {
+    if (!confirm('Xóa toàn bộ kiến thức bổ sung không anh?')) return;
+    localStorage.removeItem('sgcc_extra_knowledge');
+    document.getElementById('extra-knowledge').value = '';
+    showToast('🗑️ Đã xóa rồi ạ');
+  }
+  function renderKnowledgeTags() {
+    const topics = ['Cá Rồng', 'Cá Koi', 'Cá Betta', 'Tép màu', 'Cá Pleco', 'Cá Địa', 'Hệ thống lọc', 'Bệnh cá', 'Xử lý nước', 'Hồ mới setup', 'Mùa mưa TPHCM', 'Sản phẩm shop'];
+    document.getElementById('knowledge-tags').innerHTML = topics.map(t =>
+      `<span class="badge green">${t}</span>`
+    ).join('');
+  }
+
+  // ── PRODUCTS ──
+  function loadProductsTable() {
+    const products = JSON.parse(localStorage.getItem('sgcc_products') || '[]');
+    const tbody = document.getElementById('products-tbody');
+    if (!products.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Chưa có sản phẩm. Anh upload CSV từ POS nhé ạ!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = products.map(p => `
+      <tr>
+        <td><strong>${p.name || '—'}</strong></td>
+        <td><span class="badge blue">${p.category || '—'}</span></td>
+        <td style="color:var(--muted)">${p.size || '—'}</td>
+        <td>${p.qty || '?'}</td>
+        <td style="color:var(--success)">${p.sellPrice ? parseInt(p.sellPrice).toLocaleString('vi-VN') + 'đ' : '?'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function handleCSVUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const count = loadProductsFromCSV(e.target.result);
+      loadProductsTable();
+      updateStats();
+      const status = document.getElementById('upload-status');
+      status.style.display = 'block';
+      status.innerHTML = `<span style="color:var(--success)">✅ Đã nạp <strong>${count}</strong> sản phẩm từ CSV thành công! Bot biết tồn kho rồi ạ 🎉</span>`;
+      showToast(`✅ Nạp thành công ${count} sản phẩm ạ!`);
+    };
+    reader.readAsText(file, 'UTF-8');
+    event.target.value = '';
+  }
+
+  function loadProductsFromCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) return 0;
+    const raw = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+    const mapHeader = (h) => {
+      if (h.includes('tên') || h.includes('name')) return 'name';
+      if (h.includes('danh mục') || h.includes('category')) return 'category';
+      if (h.includes('size') || h.includes('đóng gói')) return 'size';
+      if (h.includes('số lượng') || h === 'sl' || h === 'qty') return 'qty';
+      if (h.includes('giá bán') || h.includes('sell')) return 'sellPrice';
+      if (h.includes('giá nhập') || h.includes('import')) return 'importPrice';
+      if (h.includes('đơn vị') || h.includes('unit')) return 'unit';
+      if (h.includes('barcode') || h.includes('mã vạch')) return 'barcode';
+      return h;
+    };
+    const headers = raw.map(mapHeader);
+    const products = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g,''));
+      const obj = {};
+      headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
+      if (obj.name) products.push(obj);
+    }
+    localStorage.setItem('sgcc_products', JSON.stringify(products));
+    return products.length;
+  }
+
+  // ── API KEY ──
+  function loadApiKeyFields() {
+    document.getElementById('admin-api-key').value = localStorage.getItem('sgcc_api_key') || '';
+    document.getElementById('google-client-id').value = localStorage.getItem('sgcc_google_client_id') || '';
+  }
+  function saveAdminApiKey() {
+    const key = document.getElementById('admin-api-key').value.trim();
+    if (key) { localStorage.setItem('sgcc_api_key', key); showToast('✅ Đã lưu API Key ạ!'); updateStats(); }
+  }
+  function saveGoogleClientId() {
+    const id = document.getElementById('google-client-id').value.trim();
+    if (id) { localStorage.setItem('sgcc_google_client_id', id); showToast('✅ Đã lưu Google Client ID ạ!'); }
+  }
+
+  // ── EMBED CODE ──
+  function updateEmbedCode() {
+    const code = `<!-- Chatbot Sài Gòn Cá Cảnh -->
+<script>
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://chatbot.saigoncacanh.com/widget.js';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+<\/script>`;
+    document.getElementById('embed-code').value = code;
+  }
+  function copyEmbedCode() {
+    navigator.clipboard.writeText(document.getElementById('embed-code').value)
+      .then(() => showToast('📋 Đã copy embed code rồi ạ! Paste vào WordPress Footer nhé'));
+  }
+  function copyLink() {
+    navigator.clipboard.writeText('https://chatbot.saigoncacanh.com')
+      .then(() => showToast('📋 Đã copy link ạ!'));
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sài Gòn Cá Cảnh — Trợ Lý AI 🐟</title>
+  <meta name="description" content="Hỏi AI về cá cảnh, kỹ thuật nuôi hồ, bệnh cá, sản phẩm từ Sài Gòn Cá Cảnh TP.HCM" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐟</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style-extra.css" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<!-- ═══ OCEAN BACKGROUND ═══ -->
+<div class="ocean-bg">
+  <div class="bubbles" id="bubbles"></div>
+  <div class="fish-container" id="fish-container"></div>
+</div>
+
+<!-- ═══ SETUP OVERLAY (nhập API Key lần đầu) ═══ -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-box">
+    <div style="font-size:42px;margin-bottom:12px">🐟</div>
+    <h2>Kích hoạt Trợ Lý AI</h2>
+    <p>Để chatbot hoạt động, anh cần Gemini API Key miễn phí từ Google. Chỉ mất 1 phút ạ!</p>
+
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a> — Đăng nhập Gmail</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Nhấn <strong style="color:#00c8ff">"Create API Key"</strong> → Copy key</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Paste vào ô bên dưới → Nhấn Kích hoạt</div>
+      </div>
+    </div>
+
+    <div class="api-input-wrap">
+      <input type="password" id="api-key-input" placeholder="AIzaSy..." autocomplete="off" />
+      <button class="btn-toggle-key" onclick="toggleKeyVisibility()" id="toggle-key-btn">👁️</button>
+    </div>
+
+    <button class="btn-activate" onclick="activateBot()">
+      ⚡ Kích Hoạt Chatbot
+    </button>
+
+    <p class="setup-note">
+      🔒 Key lưu trong trình duyệt của anh, không gửi đi đâu khác.<br/>
+      Miễn phí ~1.500 câu hỏi/ngày với Gemini Flash.
+    </p>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div class="app-wrapper" id="app-wrapper" style="display:none">
+
+  <!-- HEADER -->
+  <header class="chat-header">
+    <div class="header-left">
+      <div class="bot-avatar">🐟</div>
+      <div class="bot-info">
+        <div class="bot-name">Sài Gòn Cá Cảnh</div>
+        <div class="bot-status" id="bot-status-text">● Đang hoạt động</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo">
+        <svg width="14" height="14" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="#0068FF"/><text x="50%" y="58%" text-anchor="middle" fill="white" font-size="22" font-weight="bold" font-family="Arial" dy=".3em">Z</text></svg>
+        <span>Zalo Shop</span>
+      </a>
+      <a href="tel:0938604144" class="btn-hotline">📞 0938604144</a>
+      <button class="btn-icon-header" onclick="clearChat()" title="Xóa chat">🗑️</button>
+      <button class="btn-icon-header" onclick="showSettings()" title="Cài đặt">⚙️</button>
+    </div>
+  </header>
+
+  <!-- USER INFO BAR (hiện sau khi đăng nhập) -->
+  <div class="user-bar" id="user-bar" style="display:none">
+    <div class="user-bar-inner">
+      <img id="user-avatar" src="" alt="" />
+      <span id="user-name-bar">Thành viên</span>
+      <span class="member-badge">✓ Thành viên</span>
+      <button onclick="signOut()" class="btn-signout">Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="messages-area" id="messages-area">
+    <!-- populated by JS -->
+  </div>
+
+  <!-- QUICK REPLIES BAR -->
+  <div class="quick-replies-bar" id="quick-replies-bar">
+    <!-- populated by JS -->
+  </div>
+
+  <!-- IMAGE PREVIEW -->
+  <div class="img-preview-wrap" id="img-preview-wrap">
+    <div class="img-preview-inner">
+      <img id="img-preview" src="" alt="preview" />
+      <div>
+        <div style="font-size:12px;color:var(--accent);margin-bottom:4px">🔬 Gửi ảnh để AI chẩn đoán</div>
+        <button class="btn-remove-img" onclick="removeImage()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT AREA -->
+  <div class="input-area">
+    <div class="input-row">
+      <textarea
+        id="user-input"
+        placeholder="Hỏi về cá cảnh, bệnh, hồ lọc..."
+        rows="1"
+        onkeydown="handleKeyDown(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <div class="input-actions">
+        <button class="btn-attach" title="Gửi ảnh cá bệnh để AI chẩn đoán">
+          📷
+          <input type="file" accept="image/*" onchange="handleImageUpload(event)" />
+        </button>
+        <button class="btn-send" id="send-btn" onclick="sendMessage()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2" fill="white" stroke="none"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="input-hint">
+      Powered by Gemini AI ·
+      <a href="https://saigoncacanh.com" target="_blank">saigoncacanh.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GOOGLE LOGIN MODAL ═══ -->
+<div class="modal-overlay" id="login-modal" style="display:none">
+  <div class="modal-box glass-modal">
+    <div style="font-size:48px;margin-bottom:8px">🔐</div>
+    <h3>Tiếp tục với tài khoản Google</h3>
+    <p>Anh đã dùng hết <strong style="color:var(--accent)" id="msg-limit-used">5</strong> tin nhắn miễn phí.<br/>
+    Đăng nhập Google để chat không giới hạn — hoàn toàn miễn phí ạ!</p>
+
+    <div id="google-signin-btn" style="display:flex;justify-content:center;margin:20px 0"></div>
+
+    <div class="modal-divider">hoặc</div>
+
+    <a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo-modal">
+      <svg width="18" height="18" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="#0068FF"/><text x="50%" y="58%" text-anchor="middle" fill="white" font-size="22" font-weight="bold" font-family="Arial" dy=".3em">Z</text></svg>
+      Chat trực tiếp với nhân viên qua Zalo
+    </a>
+
+    <button onclick="closeLoginModal()" class="btn-close-modal">Đóng</button>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="modal-overlay" id="settings-modal" style="display:none">
+  <div class="modal-box glass-modal">
+    <h3>⚙️ Cài Đặt</h3>
+    <div class="settings-group">
+      <label>Gemini API Key</label>
+      <div class="api-input-wrap" style="margin-bottom:0">
+        <input type="password" id="settings-api-key" placeholder="AIzaSy..." />
+        <button class="btn-toggle-key" onclick="toggleSettingsKey()">👁️</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="saveSettings()" class="btn-activate" style="flex:1">💾 Lưu</button>
+      <button onclick="closeSettings()" class="btn-activate" style="flex:1;background:rgba(255,255,255,0.1)">Đóng</button>
+    </div>
+    <p class="setup-note" style="margin-top:12px">
+      Để lấy API Key miễn phí: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>
+    </p>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="knowledge-base.js"></script>
+<script src="products.js"></script>
+<script src="chatbot.js"></script>
+
+</body>
+</html>

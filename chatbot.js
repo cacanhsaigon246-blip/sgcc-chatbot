@@ -1,0 +1,663 @@
+/* ============================================================
+   CHATBOT.JS — Sài Gòn Cá Cảnh
+   Frontend kết nối Backend V4.2 (Node.js Express)
+   SSE Streaming | Google Auth | 4 Cấp Phân Quyền
+   ============================================================ */
+
+// ─── CONFIG ───────────────────────────────────────────────────
+const CONFIG = {
+  API_BASE_URL: '', // Để trống = cùng domain, hoặc 'https://chatbot.saigoncacanh.com'
+  GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID', // Anh điền vào sau
+  GUEST_MESSAGE_LIMIT: 5,
+  BOT_NAME: 'Sài Gòn Cá Cảnh',
+  SHOP_URL: 'https://saigoncacanh.com',
+  ZALO_URL: 'https://zalo.me/0938604144',
+  HOTLINE: '0938604144',
+  MAX_HISTORY: 15, // Giữ 15 tin nhắn gần nhất gửi lên server
+};
+
+// ─── STATE ────────────────────────────────────────────────────
+let state = {
+  user: JSON.parse(localStorage.getItem('sgcc_user') || 'null'),
+  guestMsgCount: parseInt(localStorage.getItem('sgcc_guest_count') || '0'),
+  chatHistory: JSON.parse(localStorage.getItem('sgcc_chat_history') || '[]'),
+  messages: [],              // UI messages
+  pendingImage: null,        // base64 image to send
+  isTyping: false,
+  products: [],              // From CSV
+};
+
+// ─── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  createOceanAnimations();
+  initGoogleSignIn();
+  loadProductsFromStorage();
+  showApp();
+  checkServerHealth();
+});
+
+function showApp() {
+  const setupEl = document.getElementById('setup-overlay');
+  if (setupEl) setupEl.style.display = 'none';
+  document.getElementById('app-wrapper').style.display = 'flex';
+  renderQuickReplies();
+  showWelcomeMessage();
+  updateUserBar();
+}
+
+// ─── SERVER HEALTH CHECK ──────────────────────────────────────
+async function checkServerHealth() {
+  try {
+    const res = await fetch(`${CONFIG.API_BASE_URL}/api/health`);
+    if (res.ok) {
+      console.log('[SGCC] ✅ Server Backend V4.2 đang hoạt động');
+    }
+  } catch (e) {
+    console.warn('[SGCC] ⚠️ Không kết nối được Backend. Kiểm tra server.');
+  }
+}
+
+// ─── GOOGLE AUTH ──────────────────────────────────────────────
+function initGoogleSignIn() {
+  if (typeof google === 'undefined') return;
+  google.accounts.id.initialize({
+    client_id: CONFIG.GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+  });
+}
+
+function renderGoogleButton() {
+  if (typeof google === 'undefined') return;
+  const container = document.getElementById('google-signin-btn');
+  if (!container) return;
+  container.innerHTML = '';
+  google.accounts.id.renderButton(container, {
+    theme: 'filled_blue',
+    size: 'large',
+    text: 'signin_with',
+    locale: 'vi',
+    width: 280,
+  });
+}
+
+function handleGoogleCredential(response) {
+  const payload = parseJwt(response.credential);
+  state.user = {
+    name: payload.name,
+    email: payload.email,
+    picture: payload.picture,
+    credential: response.credential,
+  };
+  localStorage.setItem('sgcc_user', JSON.stringify(state.user));
+  closeLoginModal();
+  updateUserBar();
+  addBotMessage(`Xin chào **${payload.name.split(' ').pop()}** ạ! 🎉 Anh đã đăng nhập thành công rồi. Em là trợ lý của Sài Gòn Cá Cảnh, anh cứ hỏi thoải mái nhé, em hỗ trợ hết ạ! 🐟`);
+  showToast(`✅ Đăng nhập thành công! Chào ${payload.name.split(' ').pop()} ạ`);
+}
+
+function parseJwt(token) {
+  const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  return JSON.parse(decodeURIComponent(atob(base64).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+}
+
+function signOut() {
+  state.user = null;
+  localStorage.removeItem('sgcc_user');
+  updateUserBar();
+  showToast('👋 Anh đã đăng xuất rồi ạ');
+}
+
+function updateUserBar() {
+  const bar = document.getElementById('user-bar');
+  if (state.user) {
+    bar.style.display = 'flex';
+    document.getElementById('user-avatar').src = state.user.picture || '';
+    document.getElementById('user-name-bar').textContent = state.user.name || 'Thành viên';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+// ─── MESSAGE LIMIT (Đã mở khóa hoàn toàn 100%) ────────────────
+function checkMessageLimit() {
+  return true; // Cho phép chat không giới hạn
+}
+
+function incrementGuestCount() {
+  if (!state.user) {
+    state.guestMsgCount++;
+    localStorage.setItem('sgcc_guest_count', state.guestMsgCount);
+    updateGuestCounter();
+  }
+}
+
+function updateGuestCounter() {
+  if (!state.user) {
+    const remaining = CONFIG.GUEST_MESSAGE_LIMIT - state.guestMsgCount;
+    if (remaining <= 2 && remaining > 0) {
+      showToast(`💡 Anh còn ${remaining} tin nhắn miễn phí. Đăng nhập Google để chat không giới hạn ạ!`);
+    }
+  }
+}
+
+// ─── LOGIN MODAL (Đã tắt hoàn toàn) ──────────────────────────
+function showLoginModal() {
+  return; // Đã mở khóa 100%, không hiện popup
+}
+function closeLoginModal() {
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────
+function showSettings() {
+  document.getElementById('settings-modal').style.display = 'flex';
+}
+function closeSettings() {
+  document.getElementById('settings-modal').style.display = 'none';
+}
+function saveSettings() {
+  closeSettings();
+  showToast('✅ Đã lưu cài đặt ạ');
+}
+
+// ─── WELCOME MESSAGE ──────────────────────────────────────────
+function showWelcomeMessage() {
+  const greeting = getGreeting();
+  const userName = state.user ? state.user.name.split(' ').pop() : 'anh';
+  addBotMessage(
+    `${greeting} **${userName}** ạ! 🐟\n\nEm là trợ lý AI của **Sài Gòn Cá Cảnh** — chuyên cá cảnh, thức ăn, phụ kiện, thuốc và vật liệu lọc tại TP.HCM.\n\nAnh cần hỏi gì em hỗ trợ ngay ạ! Hoặc anh bấm vào gợi ý bên dưới nhé 👇`,
+    false
+  );
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 11) return 'Chào buổi sáng';
+  if (h < 13) return 'Chào buổi trưa';
+  if (h < 18) return 'Chào buổi chiều';
+  return 'Chào buổi tối';
+}
+
+// ─── SEND MESSAGE (V4.2 — SSE STREAMING) ─────────────────────
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  const hasImage = !!state.pendingImage;
+
+  if (!text && !hasImage) return;
+  if (state.isTyping) return;
+  if (!checkMessageLimit()) return;
+
+  // Add user message to UI
+  const displayText = text || '📷 [Ảnh cá bệnh]';
+  addUserMessage(displayText, state.pendingImage);
+
+  // Prepare message text
+  let messageText = text;
+  if (!text && hasImage) messageText = 'Đây là ảnh cá của em, anh xem giúp em cá bị bệnh gì không ạ?';
+
+  // Clear input
+  input.value = '';
+  autoResize(input);
+  hideQuickReplies();
+  incrementGuestCount();
+
+  // Clear pending image
+  removeImage();
+
+  // Show typing
+  showTyping();
+  state.isTyping = true;
+
+  // Check Handoff Zalo
+  const lowerText = messageText.toLowerCase();
+  if (lowerText.includes('tư vấn viên') || lowerText.includes('anh phát') || lowerText.includes('chủ shop') || lowerText.includes('người thật') || lowerText.includes('gặp nhân viên') || lowerText.includes('trực tiếp')) {
+    hideTyping();
+    addBotMessage(`Dạ em chuyển kết nối đến **Anh Phát — Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo trực tiếp với Anh Phát (0938604144) chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Với Anh Phát (0938604144)</a></div>`);
+    saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Anh Phát 0938604144');
+    state.isTyping = false;
+    return;
+  }
+
+  try {
+    const reply = await callBackendSSE(messageText);
+    hideTyping();
+    findAndShowArticle(reply, text);
+    saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply);
+  } catch (err) {
+    hideTyping();
+    // Smart Fallback từ Knowledge Base nếu API bị gián đoạn
+    const smartReply = searchSmartFallback(messageText);
+    addBotMessage(smartReply);
+    saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, smartReply);
+  } finally {
+    state.isTyping = false;
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+// ─── LƯU LOG CHAT BÁO CÁO ADMIN ─────────────────────────────
+function saveChatLog(user, question, answer) {
+  const logs = JSON.parse(localStorage.getItem('sgcc_chat_logs') || '[]');
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('vi-VN');
+  logs.unshift({ time: timeStr, user: user, question: question, answer: answer.slice(0, 150) + (answer.length > 150 ? '...' : '') });
+  if (logs.length > 100) logs.pop(); // Giữ 100 log gần nhất
+  localStorage.setItem('sgcc_chat_logs', JSON.stringify(logs));
+}
+
+// ─── SMART FALLBACK TỪ KHO KIẾN THỨC ───────────────────────
+function searchSmartFallback(query) {
+  if (typeof KNOWLEDGE_BASE !== 'undefined' && KNOWLEDGE_BASE.articles) {
+    const match = KNOWLEDGE_BASE.articles.find(a => 
+      query.toLowerCase().split(' ').some(w => w.length > 3 && a.title.toLowerCase().includes(w))
+    );
+    if (match) {
+      return `Dạ về **${match.title}**, em xin tư vấn nhanh cho anh ạ:\n\n${match.summary}\n\n👉 Anh nhắn Zalo **0938604144** để em tư vấn chi tiết hơn nhé!`;
+    }
+  }
+  return `Dạ về câu hỏi của anh: "*${query}*", em xin ghi nhận lại ạ! 🐟\n\nShop Sài Gòn Cá Cảnh chuyên cá cảnh, phụ kiện, thức ăn, thuốc và vật liệu lọc. Anh có thể nhắn Zalo **0938604144** hoặc gọi Hotline để Anh Phát hỗ trợ trực tiếp ngay nhé ạ!\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Với Anh Phát (0938604144)</a></div>`;
+}
+
+function sendQuickReply(text) {
+  document.getElementById('user-input').value = text;
+  sendMessage();
+}
+
+function insertQuestion(text) {
+  document.getElementById('user-input').value = text;
+  document.getElementById('user-input').focus();
+}
+
+// ─── BACKEND V4.2 — SSE STREAMING CALL ───────────────────────
+async function callBackendSSE(message) {
+  // Chuẩn bị history gửi lên server (giữ 15 tin gần nhất)
+  const trimmedHistory = state.chatHistory.slice(-(CONFIG.MAX_HISTORY));
+
+  const res = await fetch(`${CONFIG.API_BASE_URL}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      history: trimmedHistory,
+      message: message
+    })
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  // Đọc SSE stream real-time
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullReply = '';
+  const msgId = 'msg-' + Date.now();
+
+  // Tạo khung tin nhắn bot trống để streaming vào
+  hideTyping();
+  createStreamingBubble(msgId);
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split('\n');
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const dataStr = line.slice(6).trim();
+      if (dataStr === '[DONE]') break;
+
+      try {
+        const parsed = JSON.parse(dataStr);
+        if (parsed.text) {
+          fullReply += parsed.text;
+          updateStreamingBubble(msgId, fullReply);
+        }
+        if (parsed.error) {
+          throw new Error(parsed.error);
+        }
+      } catch (e) {
+        // Bỏ qua dòng JSON dở dang
+        if (e.message && !e.message.includes('JSON')) throw e;
+      }
+    }
+  }
+
+  // Lưu vào history
+  state.chatHistory.push({ role: 'user', content: message });
+  state.chatHistory.push({ role: 'model', content: fullReply });
+  saveHistoryToStorage();
+
+  return fullReply;
+}
+
+function saveHistoryToStorage() {
+  // Giữ tối đa 15 tin nhắn trong localStorage
+  const trimmed = state.chatHistory.slice(-(CONFIG.MAX_HISTORY));
+  localStorage.setItem('sgcc_chat_history', JSON.stringify(trimmed));
+}
+
+// ─── STREAMING UI ─────────────────────────────────────────────
+function createStreamingBubble(msgId) {
+  const time = formatTime(new Date());
+  const html = `
+    <div class="msg-row bot" id="${msgId}">
+      <div class="msg-avatar">🐟</div>
+      <div>
+        <div class="msg-bubble" id="${msgId}-content"><span class="streaming-cursor">▌</span></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div class="msg-time">${time}</div>
+          <button class="msg-action-btn" onclick="copyText('${msgId}')" title="Copy">📋</button>
+          <button class="msg-action-btn" onclick="rateMsg('${msgId}','up')" title="Hữu ích">👍</button>
+          <button class="msg-action-btn" onclick="rateMsg('${msgId}','down')" title="Chưa tốt">👎</button>
+        </div>
+      </div>
+    </div>`;
+  appendMessage(html);
+}
+
+function updateStreamingBubble(msgId, text) {
+  const el = document.getElementById(`${msgId}-content`);
+  if (!el) return;
+  el.innerHTML = formatBotText(text) + '<span class="streaming-cursor">▌</span>';
+  const area = document.getElementById('messages-area');
+  area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+}
+
+function formatPrice(p) {
+  if (!p) return '?';
+  return parseInt(p).toLocaleString('vi-VN') + 'đ';
+}
+
+function handleError(err) {
+  const msg = err.message || '';
+  if (msg.includes('429') || msg.includes('quá nhanh')) return '⏳ Anh ơi, hệ thống đang bận ạ. Anh thử lại sau vài giây nhé! Hoặc liên hệ Zalo 0938604144 ạ.';
+  if (msg.includes('Failed to fetch') || msg.includes('network')) return '🌐 Mất kết nối mạng rồi anh ơi! Anh kiểm tra wifi/4G rồi thử lại nhé ạ.';
+  if (msg.includes('500')) return '🔧 Server đang bảo trì anh ạ. Anh thử lại sau vài phút nhé!';
+  console.error('Backend error:', err);
+  return `❌ Có lỗi xảy ra rồi anh ơi!\n\nAnh liên hệ Zalo **0938604144** để em hỗ trợ trực tiếp ạ!`;
+}
+
+// ─── UI — MESSAGES ────────────────────────────────────────────
+function addUserMessage(text, image) {
+  const id = 'msg-' + Date.now();
+  const time = formatTime(new Date());
+  const html = `
+    <div class="msg-row user" id="${id}">
+      <div>
+        <div class="msg-bubble">
+          ${image ? `<img src="data:${image.mimeType};base64,${image.data}" class="msg-image" alt="Ảnh gửi"/>` : ''}
+          ${text !== '📷 [Ảnh cá bệnh]' ? escapeHtml(text) : ''}
+        </div>
+        <div class="msg-time">${time}</div>
+      </div>
+      <div class="msg-avatar">
+        ${state.user && state.user.picture
+          ? `<img src="${state.user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`
+          : '👤'}
+      </div>
+    </div>`;
+  appendMessage(html);
+}
+
+function addBotMessage(text, animate = true) {
+  const id = 'msg-' + Date.now();
+  const time = formatTime(new Date());
+  const formatted = formatBotText(text);
+  const html = `
+    <div class="msg-row bot${animate ? '' : ''}" id="${id}">
+      <div class="msg-avatar">🐟</div>
+      <div>
+        <div class="msg-bubble">${formatted}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div class="msg-time">${time}</div>
+          <button class="msg-action-btn" onclick="copyText('${id}')" title="Copy">📋</button>
+          <button class="msg-action-btn" onclick="rateMsg('${id}','up')" title="Hữu ích">👍</button>
+          <button class="msg-action-btn" onclick="rateMsg('${id}','down')" title="Chưa tốt">👎</button>
+        </div>
+      </div>
+    </div>`;
+  appendMessage(html);
+}
+
+function appendMessage(html) {
+  const area = document.getElementById('messages-area');
+  area.insertAdjacentHTML('beforeend', html);
+  area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+}
+
+function formatBotText(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br/>')
+    .replace(/^/, '<p>').replace(/$/, '</p>')
+    .replace(/###\s(.+)/g, '<strong style="color:var(--accent);font-size:14px">$1</strong>')
+    .replace(/##\s(.+)/g, '<strong style="color:var(--accent);font-size:15px">$1</strong>');
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+             .replace(/\n/g,'<br>');
+}
+
+function copyText(msgId) {
+  const el = document.querySelector(`#${msgId} .msg-bubble`);
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText).then(() => showToast('📋 Đã copy rồi ạ!'));
+}
+
+function rateMsg(msgId, type) {
+  showToast(type === 'up' ? '👍 Cảm ơn anh đã đánh giá ạ!' : '👎 Em ghi nhận để cải thiện ạ!');
+}
+
+// ─── TYPING INDICATOR ─────────────────────────────────────────
+function showTyping() {
+  const html = `
+    <div class="msg-row bot typing-indicator" id="typing-indicator">
+      <div class="msg-avatar">🐟</div>
+      <div class="msg-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  appendMessage(html);
+}
+function hideTyping() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+// ─── ARTICLE FINDER ───────────────────────────────────────────
+function findAndShowArticle(reply, userText) {
+  const combined = (reply + ' ' + userText).toLowerCase();
+  for (const [key, article] of Object.entries(RELATED_ARTICLES)) {
+    if (combined.includes(key)) {
+      const html = `
+        <div class="msg-row bot" style="animation-delay:0.2s">
+          <div class="msg-avatar" style="opacity:0">.</div>
+          <div>
+            <div class="article-card">
+              <span class="read-icon">📖</span>
+              <a href="${article.url}" target="_blank">${article.title}</a>
+              <span style="font-size:10px;color:var(--text-muted);flex-shrink:0">→</span>
+            </div>
+          </div>
+        </div>`;
+      document.getElementById('messages-area').insertAdjacentHTML('beforeend', html);
+      document.getElementById('messages-area').scrollTo({ top: 99999, behavior: 'smooth' });
+      break;
+    }
+  }
+}
+
+// ─── QUICK REPLIES ────────────────────────────────────────────
+function renderQuickReplies() {
+  const bar = document.getElementById('quick-replies-bar');
+  bar.innerHTML = QUICK_SUGGESTIONS.map(s =>
+    `<button class="qr-chip" onclick="sendQuickReply('${s.text}')">
+      <span>${s.icon}</span> ${s.text}
+    </button>`
+  ).join('');
+}
+function hideQuickReplies() {
+  const bar = document.getElementById('quick-replies-bar');
+  bar.style.opacity = '0';
+  bar.style.height = '0';
+  bar.style.overflow = 'hidden';
+  bar.style.padding = '0';
+}
+
+// ─── IMAGE UPLOAD ─────────────────────────────────────────────
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('❌ Chỉ hỗ trợ file ảnh ạ'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('❌ Ảnh quá lớn, tối đa 5MB ạ'); return; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result.split(',')[1];
+    state.pendingImage = { data: base64, mimeType: file.type };
+    document.getElementById('img-preview').src = e.target.result;
+    document.getElementById('img-preview-wrap').style.display = 'flex';
+    document.getElementById('user-input').placeholder = 'Thêm mô tả (tùy chọn)...';
+    showToast('📷 Ảnh sẵn sàng! Anh nhấn gửi để AI chẩn đoán ạ');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function removeImage() {
+  state.pendingImage = null;
+  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('img-preview').src = '';
+  document.getElementById('user-input').placeholder = 'Hỏi về cá cảnh, bệnh, hồ lọc...';
+}
+
+// ─── CSV PRODUCT LOADING ──────────────────────────────────────
+function loadProductsFromStorage() {
+  const raw = localStorage.getItem('sgcc_products');
+  if (raw) {
+    try { state.products = JSON.parse(raw); } catch(e) {}
+  }
+}
+
+function loadProductsFromCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return 0;
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase()
+    .replace('tên sản phẩm', 'name').replace('tên', 'name')
+    .replace('danh mục', 'category').replace('size', 'size')
+    .replace('số lượng', 'qty').replace('sl', 'qty')
+    .replace('giá nhập', 'importPrice').replace('giá bán', 'sellPrice')
+    .replace('đơn vị', 'unit').replace('mã vạch', 'barcode')
+  );
+  const products = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const vals = parseCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').trim(); });
+    if (obj.name) products.push(obj);
+  }
+  state.products = products;
+  localStorage.setItem('sgcc_products', JSON.stringify(products));
+  return products.length;
+}
+
+function parseCSVLine(line) {
+  const result = []; let current = ''; let inQuotes = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current);
+  return result;
+}
+
+// ─── OCEAN ANIMATIONS ─────────────────────────────────────────
+function createOceanAnimations() {
+  // Bubbles
+  const bubbleContainer = document.getElementById('bubbles');
+  for (let i = 0; i < 18; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = Math.random() * 20 + 6;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random() * 100}%;
+      animation-duration:${Math.random() * 8 + 6}s;
+      animation-delay:${Math.random() * 8}s;
+    `;
+    bubbleContainer.appendChild(b);
+  }
+
+  // Fish
+  const fishContainer = document.getElementById('fish-container');
+  const fishEmojis = ['🐠', '🐡', '🐟', '🐟', '🐠'];
+  for (let i = 0; i < 5; i++) {
+    const f = document.createElement('div');
+    f.className = 'fish';
+    f.textContent = fishEmojis[i % fishEmojis.length];
+    const topPct = 10 + Math.random() * 80;
+    const duration = Math.random() * 20 + 18;
+    const delay = Math.random() * 15;
+    f.style.cssText = `
+      top:${topPct}%; font-size:${16 + Math.random()*12}px;
+      animation-duration:${duration}s;
+      animation-delay:${delay}s;
+    `;
+    fishContainer.appendChild(f);
+  }
+}
+
+// ─── INPUT HELPERS ────────────────────────────────────────────
+function handleKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function clearChat() {
+  if (!confirm('Xóa toàn bộ lịch sử chat không anh?')) return;
+  document.getElementById('messages-area').innerHTML = '';
+  state.chatHistory = [];
+  state.messages = [];
+  localStorage.removeItem('sgcc_chat_history');
+  renderQuickReplies();
+  const qr = document.getElementById('quick-replies-bar');
+  qr.style.opacity = '1'; qr.style.height = '';
+  qr.style.overflow = ''; qr.style.padding = '';
+  showWelcomeMessage();
+  showToast('🗑️ Đã xóa lịch sử chat ạ');
+}
+
+// ─── UTILITIES ────────────────────────────────────────────────
+function formatTime(date) {
+  return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
