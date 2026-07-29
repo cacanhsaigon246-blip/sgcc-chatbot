@@ -214,8 +214,8 @@ async function sendMessage() {
     const lowerText = messageText.toLowerCase();
     if (lowerText.includes('tư vấn viên') || lowerText.includes('anh phát') || lowerText.includes('chủ shop') || lowerText.includes('người thật') || lowerText.includes('gặp nhân viên') || lowerText.includes('trực tiếp')) {
       hideTyping();
-      addBotMessage(`Dạ em chuyển kết nối đến **Anh Phát — Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo trực tiếp với Anh Phát (0938604144) chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Với Anh Phát (0938604144)</a></div>`);
-      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Anh Phát 0938604144');
+      addBotMessage(`Dạ em chuyển kết nối đến **Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo hỗ trợ chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Trực Tiếp Qua Zalo Shop</a></div>`);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Shop');
       return;
     }
 
@@ -261,7 +261,7 @@ function searchSmartFallback(query) {
       return `Dạ về **${match.title}**, em xin tóm tắt giải pháp nhanh cho anh ạ:\n\n${match.summary}\n\n📖 **Anh/chị xem hướng dẫn chi tiết từng bước tại bài viết này nhé:**\n👉 [${match.title}](${match.url || 'https://saigoncacanh.com'})\n\n🛍️ **Anh/chị có thể tham khảo mua sản phẩm chính hãng giao nhanh tại Siêu thị Shopee:**\n👉 [Siêu Thị Sản Phẩm Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)`;
     }
   }
-  return `Dạ về câu hỏi của anh: "*${query}*", em xin tư vấn giải pháp nhanh cho anh ạ! 🐟\n\n- Với các dòng cá cảnh, thức ăn và phụ kiện, anh có thể tham khảo bài viết hướng dẫn trên website chính:\n👉 📖 [Xem bài viết hướng dẫn nuôi cá tại saigoncacanh.com](https://saigoncacanh.com)\n\n- Để xem giá và đặt mua sản phẩm/thuốc chữa bệnh giao nhanh trên Shopee:\n👉 🛍️ [Ghé Siêu Thị Shopee Affiliate Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Zalo Trực Tiếp Với Anh Phát (0938604144)</a></div>`;
+  return `Dạ về câu hỏi của anh: "*${query}*", em xin tư vấn giải pháp nhanh cho anh ạ! 🐟\n\n- Với các dòng cá cảnh, thức ăn và phụ kiện, anh có thể tham khảo bài viết hướng dẫn trên website chính:\n👉 📖 [Xem bài viết hướng dẫn nuôi cá tại saigoncacanh.com](https://saigoncacanh.com)\n\n- Để xem giá và đặt mua sản phẩm/thuốc chữa bệnh giao nhanh trên Shopee:\n👉 🛍️ [Ghé Siêu Thị Shopee Affiliate Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Trực Tiếp Qua Zalo Shop</a></div>`;
 }
 
 function sendQuickReply(text) {
