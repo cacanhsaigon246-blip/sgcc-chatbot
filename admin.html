@@ -225,26 +225,31 @@
       <!-- DASHBOARD -->
       <section class="admin-section active" id="sec-dashboard">
         <h2>📊 Tổng Quan</h2>
-        <div class="stat-grid">
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))">
           <div class="stat-card">
-            <div class="label">Thành viên đã đăng ký</div>
+            <div class="label">Thành viên đăng ký</div>
             <div class="value" id="stat-members">--</div>
-            <div class="sub">Đăng nhập Google</div>
+            <div class="sub">Đăng nhập bằng Google</div>
           </div>
           <div class="stat-card">
-            <div class="label">Sản phẩm trong bot</div>
-            <div class="value" id="stat-products">--</div>
-            <div class="sub">Từ CSV POS</div>
+            <div class="label">Bài viết kỹ thuật</div>
+            <div class="value" id="stat-wp-posts">--</div>
+            <div class="sub">saigoncacanh.com (Blog)</div>
           </div>
           <div class="stat-card">
-            <div class="label">API Key</div>
+            <div class="label">Sản phẩm Web</div>
+            <div class="value" id="stat-wp-products">--</div>
+            <div class="sub">saigoncacanh.com (Shop)</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Kho POS thực tế</div>
+            <div class="value" id="stat-pos-products">--</div>
+            <div class="sub">pos.saigoncacanh.com</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">API Key Server</div>
             <div class="value" id="stat-key">--</div>
-            <div class="sub">Gemini Flash</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Trạng thái Bot</div>
-            <div class="value" style="color:var(--success)">🟢</div>
-            <div class="sub">Đang hoạt động</div>
+            <div class="sub">Gemini Flash-Lite</div>
           </div>
         </div>
 
@@ -653,7 +658,8 @@
   }
 
   function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   // ── WOOCOMMERCE SYNC ──
@@ -719,39 +725,17 @@
 
   async function updateStats() {
     try {
-      const res = await fetch('get_pos_products.php');
+      const res = await fetch('get_stats.php');
       const data = await res.json();
-      if (data.status === 'ok' && data.products) {
-        document.getElementById('stat-products').textContent = data.products.length;
-      } else {
-        document.getElementById('stat-products').textContent = '0';
+      if (data.status === 'success') {
+        document.getElementById('stat-members').textContent = data.members_count || '0';
+        document.getElementById('stat-wp-posts').textContent = data.wp_posts_count || '0';
+        document.getElementById('stat-wp-products').textContent = data.wp_products_count || '0';
+        document.getElementById('stat-pos-products').textContent = data.pos_products_count || '0';
+        document.getElementById('stat-key').textContent = data.has_key ? '✅ Đã lưu' : '❌ Chưa có';
       }
     } catch(e) {
-      document.getElementById('stat-products').textContent = '—';
-    }
-    
-    try {
-      const res = await fetch('get_members.php');
-      const data = await res.json();
-      if (data.status === 'ok' && data.members) {
-        document.getElementById('stat-members').textContent = data.members.length;
-      } else {
-        document.getElementById('stat-members').textContent = '0';
-      }
-    } catch(e) {
-      document.getElementById('stat-members').textContent = '—';
-    }
-
-    // Kiểm tra server health qua proxy.php
-    try {
-      const res = await fetch(`proxy.php?health=1`);
-      if (res.ok) {
-        document.getElementById('stat-key').textContent = '✅ Server OK';
-      } else {
-        document.getElementById('stat-key').textContent = '⚠️ Kiểm tra Server';
-      }
-    } catch (e) {
-      document.getElementById('stat-key').textContent = '✅ Server PHP OK';
+      console.warn('[SGCC] Loi cap nhat thong ke:', e);
     }
   }
 
