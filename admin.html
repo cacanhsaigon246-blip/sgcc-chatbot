@@ -337,18 +337,29 @@
         <div class="form-card" style="margin-bottom:20px">
           <h3>📤 3. Nạp Kho Hàng Thực Tế (POS - ƯU TIÊN CAO NHẤT)</h3>
           <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
-            Nạp kho hàng thực tế đang có sẵn tại tiệm để Chatbot ưu tiên báo giá chuẩn xác & khẳng định hàng có sẵn.<br/>
-            1. Anh vào <a href="https://pos.saigoncacanh.com" target="_blank" style="color:var(--accent)">pos.saigoncacanh.com</a> → <strong>Kho Hàng</strong><br/>
-            2. Nhấn nút <strong>📥 Xuất Excel/CSV</strong><br/>
-            3. Upload file đó trực tiếp vào đây để lưu lên máy chủ:
+            Cập nhật kho hàng thực tế đang có sẵn tại tiệm (tồn kho, giá bán) để Chatbot ưu tiên báo giá chuẩn xác & khẳng định hàng có sẵn.
           </p>
-          <div class="upload-zone" onclick="document.getElementById('pos-csv-file').click()">
-            <input type="file" id="pos-csv-file" style="display:none" accept=".csv" onchange="handleCSVUpload(event)" />
-            <div class="icon">📂</div>
-            <p>Kéo thả hoặc <strong>click để chọn file CSV từ POS</strong></p>
-            <p style="font-size:11px;margin-top:4px">Được định dạng chuẩn hóa & lưu trữ trên Server Hostinger</p>
+          
+          <!-- Cách 1: Tự động -->
+          <div style="background:rgba(0,104,255,0.06);border:1px solid rgba(0,104,255,0.2);padding:14px;border-radius:8px;margin-bottom:14px">
+            <h4 style="margin:0 0 8px 0;color:var(--accent)">⚡ Cách 1: Đồng Bộ Tự Động Trực Tiếp (Khuyên Dùng)</h4>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px 0">Hệ thống sẽ tự động kết nối trực tiếp vào Database của pos.saigoncacanh.com và cập nhật tồn kho tức thì.</p>
+            <button class="btn-primary" onclick="syncPOSDatabase()" style="background:var(--accent)">⚡ Đồng Bộ POS Tự Động Ngay</button>
+            <div id="sync-pos-db-status" style="margin-top:10px;font-size:13px"></div>
           </div>
-          <div id="upload-status" style="margin-top:14px;font-size:13px;display:none"></div>
+
+          <!-- Cách 2: Thủ công -->
+          <div>
+            <h4 style="margin:0 0 8px 0;color:var(--text)">📂 Cách 2: Nạp File CSV Thủ Công (Dự phòng)</h4>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px 0">Dùng khi database bị lỗi kết nối hoặc anh muốn nạp dữ liệu thủ công từ file xuất Excel.</p>
+            <div class="upload-zone" onclick="document.getElementById('pos-csv-file').click()">
+              <input type="file" id="pos-csv-file" style="display:none" accept=".csv" onchange="handleCSVUpload(event)" />
+              <div class="icon">📂</div>
+              <p>Kéo thả hoặc <strong>click để chọn file CSV từ POS</strong></p>
+              <p style="font-size:11px;margin-top:4px">Được định dạng chuẩn hóa & lưu trữ trên Server Hostinger</p>
+            </div>
+            <div id="upload-status" style="margin-top:14px;font-size:13px;display:none"></div>
+          </div>
         </div>
 
         <div class="form-card">
@@ -679,6 +690,30 @@
       }
     } catch (e) {
       statusEl.innerHTML = '<span style="color:var(--danger)">❌ Lỗi kết nối API sản phẩm saigoncacanh.com.</span>';
+    }
+  }
+
+  async function syncPOSDatabase() {
+    const statusEl = document.getElementById('sync-pos-db-status');
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Đang kết nối trực tiếp Database POS của shop...</span>';
+    try {
+      const res = await fetch('sync_pos_db.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ pass: 'sgcacanh2024' })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        const count = data.count || 0;
+        statusEl.innerHTML = `<span style="color:var(--success)">✅ Đồng bộ thành công ${count} sản phẩm thực tế từ Database POS!</span>`;
+        showToast(`✅ Đã đồng bộ ${count} sản phẩm POS thực tế!`);
+        loadProductsTable();
+        updateStats();
+      } else {
+        statusEl.innerHTML = `<span style="color:var(--danger)">⚠️ Lỗi: ${data.message}</span>`;
+      }
+    } catch (e) {
+      statusEl.innerHTML = '<span style="color:var(--danger)">❌ Lỗi kết nối CSDL POS trên server Hostinger.</span>';
     }
   }
 
