@@ -73,30 +73,27 @@ if (empty($api_key)) {
     exit();
 }
 
-// Tự động chèn Quy tắc Q&A huấn luyện từ Admin Panel vào nội dung câu hỏi
+// ── CHUẨN BỊ CHỈ THỊ HỆ THỐNG (SYSTEM INSTRUCTION) ──────────────────
+$qa_rules = "";
+$qa_file = __DIR__ . '/qa_pairs';
+// Đọc quy tắc Q&A từ admin
 $qa_file = __DIR__ . '/qa_pairs.json';
 if (file_exists($qa_file)) {
     $qa_data = json_decode(file_get_contents($qa_file), true);
     if (is_array($qa_data) && !empty($qa_data)) {
-        $qa_rules = "\n\n[QUY TẮC TRẢ LỜI QUAN TRỌNG ĐƯỢC CHỈ ĐỊNH BỞI CỬA HÀNG - HÃY TUÂN THỦ TUYỆT ĐỐI]:\n";
+        $qa_rules = "\n[QUY TẮC PHẢN HỒI BẮT BUỘC TỪ CHỦ TIỆM (ANH PHÁT)]:\n";
         foreach ($qa_data as $qa) {
             if (!empty($qa['question']) && !empty($qa['answer'])) {
-                $qa_rules .= "- Khách hỏi: \"" . $qa['question'] . "\"\n  Hãy trả lời đúng như sau: \"" . $qa['answer'] . "\"\n";
+                $qa_rules .= "- Khách hỏi: \"" . $qa['question'] . "\" -> Bạn trả lời đúng như sau: \"" . $qa['answer'] . "\"\n";
             }
-        }
-        $qa_rules .= "\nNếu câu hỏi của khách hàng trùng khớp hoặc gần giống với các câu hỏi trên, bạn PHẢI sử dụng câu trả lời tương ứng được chỉ định ở trên thay vì tự ý bịa đặt.";
-        
-        if (isset($data['contents'][0]['parts'][0]['text'])) {
-            $data['contents'][0]['parts'][0]['text'] .= $qa_rules;
         }
     }
 }
 
-// Tự động định vị Tỉnh/Thành của khách hàng qua IP để chỉ thị AI
+// Định vị địa lý của khách hàng
 $client_ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR']);
 $city = 'Không rõ';
 if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
-    // Gọi API định vị nhẹ qua ip-api
     $geo_res = @file_get_contents("http://ip-api.com/json/" . $client_ip . "?fields=status,city");
     if ($geo_res) {
         $geo_data = json_decode($geo_res, true);
@@ -108,31 +105,27 @@ if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
 
 $location_instruction = "";
 if ($city === 'Không rõ') {
-    $location_instruction = "\n\n[CHỈ THỊ THU THẬP THÔNG TIN]: Vị trí địa lý của khách hàng hiện tại chưa rõ ràng (Không rõ). Hãy tìm thời cơ khéo léo hỏi xem khách ở quận nào của TP.HCM hoặc ở tỉnh nào để tiện báo giá ship chính xác và tư vấn.";
+    $location_instruction = "- Vị trí khách hàng: Chưa rõ. Hãy tìm thời cơ khéo léo hỏi xem khách ở quận nào của TP.HCM hoặc ở tỉnh nào để tiện báo giá ship chính xác.";
 } else if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) {
-    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH Ở TP.HCM]: Khách hàng này đang ở khu vực TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp cửa hàng tại địa chỉ: 246 Hồ Văn Huê, Phường Đức Nhuận để lựa chọn cá trực tiếp và nhận tư vấn chuyên sâu từ chủ cửa hàng (anh Phát).";
+    $location_instruction = "- Vị trí khách hàng: TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp tiệm tại địa chỉ: 246 Hồ Văn Huê, Phường 9, Phú Nhuận để lựa chọn cá trực tiếp.";
 } else {
-    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH TỈNH]: Khách hàng này ở ngoài TP.HCM (" . $city . "). Hãy hướng dẫn họ mua sắm Online và tư vấn mua phụ kiện/thuốc chữa bệnh qua Siêu thị Shopee bên em giao hàng nhanh toàn quốc: https://shop.saigoncacanh.com hoặc nhắn Zalo Shop.";
+    $location_instruction = "- Vị trí khách hàng: Tỉnh ngoài TP.HCM (" . $city . "). Hướng dẫn khách mua Online qua Shopee: https://shop.saigoncacanh.com hoặc Zalo.";
 }
 
-// Kịch bản dẫn dụ xin thông tin (SĐT, Địa chỉ) khéo léo, tự nhiên
-$location_instruction .= "\n\n[HƯỚNG DẪN DẪN DỤ XIN THÔNG TIN TỰ NHIÊN - TUYỆT ĐỐI KHÔNG ÉP BUỘC]:
-Khi khách hỏi mua, tư vấn giá, chốt đơn hoặc hỏi về phí ship, hãy dùng các cái cớ sau để khách tự nguyện để lại thông tin thật mà không nghi ngờ:
-1. Tạo mã ưu đãi: 'Dạ hiện hệ thống POS của tiệm đang có mã giảm giá 5% cho khách lẻ chốt đơn hôm nay. Anh/chị cho em xin số điện thoại để em kích hoạt ưu đãi này trên hệ thống cho mình nhé ạ!'
-2. Kiểm tra Freeship & phí vận chuyển: 'Dạ để em kiểm tra phí giao hàng hỏa tốc tốt nhất và xem đơn mình có được hỗ trợ Freeship không, anh/chị cho em xin số điện thoại và địa chỉ nhận hàng cụ thể nha!'
-3. Gửi hình ảnh/video cá thực tế qua Zalo: 'Dạ các dòng cá tại tiệm đang rất đẹp và khỏe. Anh cho em xin số điện thoại kết nối Zalo để kỹ thuật viên bên em quay video thực tế cá tại tiệm gửi anh xem và lựa chọn cho trực quan nhé!'";
-
-// Chỉ thị phân biệt website thông tin và kho hàng POS thực tế & GỢI Ý SẢN PHẨM / BÀI VIẾT LIÊN QUAN
-$location_instruction .= "\n\n[LƯU Ý PHÂN BIỆT KÊNH THÔNG TIN VÀ KHO HÀNG THỰC TẾ]:
-- Website saigoncacanh.com chỉ dùng để chứa thông tin giới thiệu, hướng dẫn kỹ thuật nuôi cá và bài viết chia sẻ kinh nghiệm (Hãy hướng dẫn khách đọc bài viết ở đây để tham khảo).
-- Hệ thống POS (pos.saigoncacanh.com) được đưa vào dưới dạng bảng [DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ SẴN TẠI CỬA HÀNG] mới là nơi chứa sản phẩm, giá bán và số lượng tồn kho THỰC TẾ đang có tại tiệm. Bạn PHẢI ưu tiên giới thiệu các sản phẩm thực tế có sẵn này và báo đúng giá bán tại tiệm cho khách hàng.
-
-[BẮT BUỘC GỢI Ý SẢN PHẨM & BÀI VIẾT LIÊN QUAN]:
-- Khi khách hỏi về một loại cá hoặc phụ kiện bất kỳ, bạn PHẢI giới thiệu sản phẩm liên quan trong danh sách bên dưới (ví dụ khách hỏi cá bảy màu, hãy giới thiệu thêm thức ăn cá bảy màu, lọc, sưởi liên quan).
-- Khi khách hỏi hướng dẫn kỹ thuật hoặc bệnh cá, bạn PHẢI đính kèm đường link bài viết hướng dẫn tương ứng được cung cấp dưới đây để khách bấm vào xem chi tiết.";
-
+// Trích xuất câu hỏi thô để làm đối khớp từ khóa
+$question = '';
 if (isset($data['contents'][0]['parts'][0]['text'])) {
-    $data['contents'][0]['parts'][0]['text'] .= $location_instruction;
+    $prompt_text = $data['contents'][0]['parts'][0]['text'];
+    $parts_lines = explode("\n", $prompt_text);
+    foreach (array_reverse($parts_lines) as $line) {
+        if (stripos($line, 'Câu hỏi của khách:') !== false) {
+            $question = trim(str_ireplace('Câu hỏi của khách:', '', $line));
+            break;
+        }
+    }
+    if (empty($question)) {
+        $question = $prompt_text;
+    }
 }
 
 // Hàm loại bỏ dấu tiếng Việt để đối khớp không dấu
@@ -152,32 +145,14 @@ function stripAccents($str) {
     return $str;
 }
 
-// Tải và khớp từ khóa với sản phẩm POS thực tế, sản phẩm WooCommerce và bài viết WordPress
-$question = '';
-if (isset($data['contents'][0]['parts'][0]['text'])) {
-    $prompt_text = $data['contents'][0]['parts'][0]['text'];
-    $parts_lines = explode("\n", $prompt_text);
-    foreach (array_reverse($parts_lines) as $line) {
-        if (stripos($line, 'Câu hỏi của khách:') !== false) {
-            $question = trim(str_ireplace('Câu hỏi của khách:', '', $line));
-            break;
-        }
-    }
-    if (empty($question)) {
-        $question = $prompt_text;
-    }
-}
-
 $matching_context = "";
-
 if (!empty($question)) {
-    // Chuyển câu hỏi sang dạng chữ thường không dấu để so khớp
     $q_stripped = stripAccents(mb_strtolower($question, 'UTF-8'));
     $q_words = preg_split('/\s+/', $q_stripped);
-    $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 1; }); // Lọc từ > 1 ký tự
+    $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 1; });
 
     if (!empty($q_words)) {
-        // 1. Tìm trong sản phẩm POS thực tế (pos_products.json) - Ưu tiên 1
+        // 1. Khớp kho POS thực tế
         $pos_file = __DIR__ . '/pos_products.json';
         if (file_exists($pos_file)) {
             $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
@@ -193,15 +168,14 @@ if (!empty($question)) {
             }
             $matched_pos = array_slice($matched_pos, 0, 8);
             if (!empty($matched_pos)) {
-                $matching_context .= "\n\n[DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ TRỰC TIẾP TẠI KHO - ƯU TIÊN GIỚI THIỆU HÀNG ĐẦU (pos.saigoncacanh.com)]:\n";
+                $matching_context .= "\n[DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ TẠI TIỆM (pos.saigoncacanh.com)]:\n";
                 foreach ($matched_pos as $p) {
-                    $matching_context .= "- Tên: " . $p['name'] . " | Giá bán tại tiệm: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ | Tồn kho hiện tại: " . ($p['qty'] ?? 0) . " | Size: " . ($p['size'] ?? '—') . "\n";
+                    $matching_context .= "- " . $p['name'] . " | Giá tại tiệm: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ | Tồn: " . ($p['qty'] ?? 0) . " | Size: " . ($p['size'] ?? '—') . "\n";
                 }
-                $matching_context .= "-> Bạn hãy dùng các sản phẩm thực tế ở trên để báo giá chính xác và khẳng định ĐANG CÓ SẴN TẠI TIỆM cho khách.";
             }
         }
 
-        // 2. Tìm trong sản phẩm WooCommerce trên website (woocommerce_products.json) - Ưu tiên 2
+        // 2. Khớp sản phẩm giới thiệu web
         $woo_file = __DIR__ . '/woocommerce_products.json';
         if (file_exists($woo_file)) {
             $woo_products = json_decode(file_get_contents($woo_file), true) ?: [];
@@ -215,17 +189,16 @@ if (!empty($question)) {
                     }
                 }
             }
-            $matched_woo = array_slice($matched_woo, 0, 5);
+            $matched_woo = array_slice($matched_woo, 0, 4);
             if (!empty($matched_woo)) {
-                $matching_context .= "\n\n[SẢN PHẨM KHÁC TRÊN WEBSITE SAIGONCACANH.COM (THÔNG TIN THAM KHẢO - ƯU TIÊN 2)]:\n";
+                $matching_context .= "\n[SẢN PHẨM KHÁC TRÊN WEBSITE SAIGONCACANH.COM]:\n";
                 foreach ($matched_woo as $p) {
-                    $matching_context .= "- " . $p['name'] . " | Xem chi tiết: " . ($p['link'] ?? 'https://saigoncacanh.com') . "\n";
+                    $matching_context .= "- " . $p['name'] . " | Link xem: " . ($p['link'] ?? 'https://saigoncacanh.com') . "\n";
                 }
-                $matching_context .= "-> Hãy nói rõ đây là sản phẩm giới thiệu trên web chính, anh nhắn số điện thoại để em kiểm tra xem kho hàng thực tế (POS) còn hàng sẵn không nhé.";
             }
         }
 
-        // 3. Tìm trong bài viết WordPress (wordpress_posts.json) - Ưu tiên 3
+        // 3. Khớp bài viết
         $posts_file = __DIR__ . '/wordpress_posts.json';
         if (file_exists($posts_file)) {
             $posts_data = json_decode(file_get_contents($posts_file), true) ?: [];
@@ -241,19 +214,44 @@ if (!empty($question)) {
             }
             $matched_posts = array_slice($matched_posts, 0, 3);
             if (!empty($matched_posts)) {
-                $matching_context .= "\n\n[BÀI VIẾT HƯỚNG DẪN CHI TIẾT TỪ WEBSITE SAIGONCACANH.COM - HÃY GỢI Ý LINK CHO KHÁCH ĐỌC THÊM]:\n";
+                $matching_context .= "\n[BÀI VIẾT HƯỚNG DẪN TỪ WEBSITE SAIGONCACANH.COM]:\n";
                 foreach ($matched_posts as $post) {
-                    $matching_context .= "- Hướng dẫn: \"" . $post['name'] . "\" -> Đường dẫn bài viết: " . ($post['link'] ?? '') . "\n";
+                    $matching_context .= "- Hướng dẫn: \"" . $post['name'] . "\" | Link đọc: " . ($post['link'] ?? '') . "\n";
                 }
             }
         }
     }
 }
 
-// Chèn toàn bộ ngữ cảnh tìm kiếm vào trước câu hỏi
-if (!empty($matching_context) && isset($data['contents'][0]['parts'][0]['text'])) {
-    $data['contents'][0]['parts'][0]['text'] .= $matching_context;
-}
+// Xây dựng System Prompt cứng mang phong cách thợ cả miền Nam, thực chiến bán hàng
+$system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh 'Sài Gòn Cá Cảnh' (địa chỉ 246 Hồ Văn Huê, Phường 9, Quận Phú Nhuận, TP.HCM).
+
+[VAI TRÒ & PHONG CÁCH PHẢN HỒI]:
+- Đóng vai một 'thợ cả' lão làng, thợ kỹ thuật nuôi cá rồng và cá cảnh dày dặn kinh nghiệm, chuyên nghiệp nhưng vô cùng bình dân, mộc mạc và gần gũi.
+- Sử dụng văn phong miền Nam tự nhiên, thân thiết, đúng chất dân chơi cá Sài Gòn (xưng hô: dạ - em - anh/chị, dùng các từ ngữ gần gũi như 'tiệm em', 'bên em', 'hồ mình', 'dòng này', 'nhận hàng', 'giao hỏa tốc', 'kết nối Zalo').
+- Tuyệt đối LỘT BỎ hoàn toàn những câu trả lời dài dòng mang tính văn mẫu, sáo rỗng hoặc lý thuyết sách vở. Nói năng sắc bén, tập trung đi thẳng vào bóc tách nguyên nhân cốt lõi của vấn đề và chốt đơn ngay sản phẩm tại shop.
+
+[MỤC TIÊU BÁN HÀNG & GẮN DỮ LIỆU KHO POS]:
+- Mọi câu hỏi của khách hàng về bệnh cá, cách setup hồ, chăm nước, vật liệu lọc đều phải được định hướng trực tiếp đến các sản phẩm cụ thể đang có sẵn tại cửa hàng 246 Hồ Văn Huê.
+- Bạn phải chỉ mặt gọi tên ngay sản phẩm thuốc/vật liệu lọc/sưởi phù hợp trong danh sách bên dưới, báo đúng giá bán tại tiệm để khách hàng chốt đơn nhanh chóng. Khẳng định hàng luôn có sẵn giao hỏa tốc.
+- Khi khách hỏi về một loại cá hoặc phụ kiện bất kỳ, bạn PHẢI giới thiệu sản phẩm liên quan trong danh sách bên dưới (ví dụ khách hỏi cá bảy màu, hãy giới thiệu thêm thức ăn cá bảy màu, lọc, sưởi liên quan).
+- Khi khách hỏi hướng dẫn kỹ thuật hoặc bệnh cá, bạn PHẢI đính kèm đường link bài viết hướng dẫn tương ứng được cung cấp dưới đây để khách bấm vào xem chi tiết.
+
+[ĐỊA LÝ & XIN THÔNG TIN KHÉO LÉO]:
+- Khi khách hỏi mua hoặc chốt đơn, khéo léo dùng các cái cớ tự nhiên (tặng mã giảm giá 5% lẻ trên hệ thống POS cho đơn đầu tiên, kiểm tra phí ship hỏa tốc tốt nhất, gửi video thực tế qua Zalo) để xin SĐT và địa chỉ của khách một cách tự nhiên nhất.
+- Địa phương khách ở hiện tại: " . $city . " (sử dụng thông tin này để tư vấn ship hoặc mời ghé tiệm).
+
+[NGỮ CẢNH HỆ THỐNG]:
+" . $location_instruction . "
+" . $qa_rules . "
+" . $matching_context;
+
+// Chèn systemInstruction cho Gemini API
+$data['systemInstruction'] = [
+    'parts' => [
+        ['text' => $system_prompt]
+    ]
+];
 
 // ── CALL GEMINI API ───────────────────────────────────────────
 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);

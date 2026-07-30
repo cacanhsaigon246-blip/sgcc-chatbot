@@ -608,6 +608,13 @@
     document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.remove('active'));
     document.getElementById('sec-' + name).classList.add('active');
     btn.classList.add('active');
+
+    // Tải lại dữ liệu tương ứng khi nhấn chọn
+    if (name === 'apikey') loadApiKeyFields();
+    if (name === 'products') loadProductsTable();
+    if (name === 'chatlogs') loadChatLogsTable();
+    if (name === 'members') loadMembersTable();
+    if (name === 'qa') { loadQATable(); loadUnansweredTable(); }
   }
 
   // ── INIT ──
@@ -621,6 +628,7 @@
     loadMembersTable();
     loadQATable();
     loadUnansweredTable();
+    loadApiKeyFields();
   }
 
   // ── CHAT LOGS ──
