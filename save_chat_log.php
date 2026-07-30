@@ -4,6 +4,24 @@ header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=utf-8');
 
 $input = json_decode(file_get_contents('php://input'), true);
+
+function isValidVietnamesePhone($phone) {
+    $phone = preg_replace('/\D/', '', $phone);
+    if (strpos($phone, '84') === 0 && strlen($phone) === 11) {
+        $phone = '0' . substr($phone, 2);
+    }
+    if (strlen($phone) !== 10) return false;
+    if (!preg_match('/^(03|05|07|08|09)/', $phone)) return false;
+    if (preg_match('/^(\d)\1{9}$/', $phone)) return false; // Lọc số rác như 0999999999 hoặc 1111111111
+    return $phone;
+}
+
+function isValidAddress($address) {
+    $address = trim($address);
+    if (mb_strlen($address, 'UTF-8') < 6) return false;
+    if (preg_match('/^(abc|123|test|nhà|ở đây|không có|rác|không biết)/i', $address)) return false;
+    return true;
+}
 $user = isset($input['user']) ? trim($input['user']) : 'Khách vãng lai';
 $question = isset($input['question']) ? trim($input['question']) : '';
 $answer = isset($input['answer']) ? trim($input['answer']) : '';
@@ -37,13 +55,14 @@ $raw_user = $user; // Giữ lại tên thô của người dùng
 // A. Phân tích trích xuất Số điện thoại từ tin nhắn khách
 $detected_phone = '';
 if (preg_match('/(0[1-9]\d{8})/', $question, $matches)) {
-    $detected_phone = $matches[1];
+    $detected_phone = isValidVietnamesePhone($matches[1]) ?: '';
 }
 
 // B. Phân tích trích xuất Địa chỉ cụ thể từ tin nhắn khách
 $detected_address = '';
 if (preg_match('/(?:địa chỉ|ship đến|ở tại|địa chỉ là|giao đến)\s*[:|-]?\s*([^,\n\.\?]{6,100})/ui', $question, $addr_matches)) {
-    $detected_address = trim($addr_matches[1]);
+    $raw_addr = trim($addr_matches[1]);
+    $detected_address = isValidAddress($raw_addr) ? $raw_addr : '';
 }
 
 // C. Nhận dạng Tỉnh/Thành từ các từ khóa trong tin nhắn

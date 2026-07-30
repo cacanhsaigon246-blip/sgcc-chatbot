@@ -108,12 +108,24 @@ if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
 
 $location_instruction = "";
 if ($city === 'Không rõ') {
-    $location_instruction = "\n\n[CHỈ THỊ THU THẬP THÔNG TIN]: Vị trí địa lý của khách hàng hiện tại chưa rõ ràng (Không rõ). Hãy tìm thời cơ khéo léo hỏi xem khách ở quận nào của TP.HCM hoặc ở tỉnh nào để tiện báo giá ship chính xác và tư vấn. Khi khách có nhu cầu mua hàng, hãy lịch sự xin Số điện thoại và Địa chỉ chi tiết để shop gọi điện chốt đơn nhanh nhất.";
+    $location_instruction = "\n\n[CHỈ THỊ THU THẬP THÔNG TIN]: Vị trí địa lý của khách hàng hiện tại chưa rõ ràng (Không rõ). Hãy tìm thời cơ khéo léo hỏi xem khách ở quận nào của TP.HCM hoặc ở tỉnh nào để tiện báo giá ship chính xác và tư vấn.";
 } else if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) {
-    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH Ở TP.HCM]: Khách hàng này đang ở khu vực TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp cửa hàng tại địa chỉ: 246 Hồ Văn Huê, Phường Đức Nhuận để lựa chọn cá trực tiếp và nhận tư vấn chuyên sâu từ chủ cửa hàng (anh Phát). Khi khách có nhu cầu mua hàng hoặc giao tận nơi, hãy khéo léo xin Số điện thoại và Địa chỉ cụ thể để shop gọi hỗ trợ nhé.";
+    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH Ở TP.HCM]: Khách hàng này đang ở khu vực TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp cửa hàng tại địa chỉ: 246 Hồ Văn Huê, Phường Đức Nhuận để lựa chọn cá trực tiếp và nhận tư vấn chuyên sâu từ chủ cửa hàng (anh Phát).";
 } else {
-    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH TỈNH]: Khách hàng này ở ngoài TP.HCM (" . $city . "). Hãy hướng dẫn họ mua sắm Online và tư vấn mua phụ kiện/thuốc chữa bệnh qua Siêu thị Shopee bên em giao hàng nhanh toàn quốc: https://shop.saigoncacanh.com hoặc nhắn Zalo Shop. Khi khách muốn đặt hàng trực tiếp, hãy khéo léo xin Số điện thoại và Địa chỉ giao hàng để shop gọi tư vấn và vận chuyển.";
+    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH TỈNH]: Khách hàng này ở ngoài TP.HCM (" . $city . "). Hãy hướng dẫn họ mua sắm Online và tư vấn mua phụ kiện/thuốc chữa bệnh qua Siêu thị Shopee bên em giao hàng nhanh toàn quốc: https://shop.saigoncacanh.com hoặc nhắn Zalo Shop.";
 }
+
+// Kịch bản dẫn dụ xin thông tin (SĐT, Địa chỉ) khéo léo, tự nhiên
+$location_instruction .= "\n\n[HƯỚNG DẪN DẪN DỤ XIN THÔNG TIN TỰ NHIÊN - TUYỆT ĐỐI KHÔNG ÉP BUỘC]:
+Khi khách hỏi mua, tư vấn giá, chốt đơn hoặc hỏi về phí ship, hãy dùng các cái cớ sau để khách tự nguyện để lại thông tin thật mà không nghi ngờ:
+1. Tạo mã ưu đãi: 'Dạ hiện hệ thống POS của tiệm đang có mã giảm giá 5% cho khách lẻ chốt đơn hôm nay. Anh/chị cho em xin số điện thoại để em kích hoạt ưu đãi này trên hệ thống cho mình nhé ạ!'
+2. Kiểm tra Freeship & phí vận chuyển: 'Dạ để em kiểm tra phí giao hàng hỏa tốc tốt nhất và xem đơn mình có được hỗ trợ Freeship không, anh/chị cho em xin số điện thoại và địa chỉ nhận hàng cụ thể nha!'
+3. Gửi hình ảnh/video cá thực tế qua Zalo: 'Dạ các dòng cá tại tiệm đang rất đẹp và khỏe. Anh cho em xin số điện thoại kết nối Zalo để kỹ thuật viên bên em quay video thực tế cá tại tiệm gửi anh xem và lựa chọn cho trực quan nhé!'";
+
+// Chỉ thị phân biệt website thông tin và kho hàng POS thực tế
+$location_instruction .= "\n\n[LƯU Ý PHÂN BIỆT KÊNH THÔNG TIN VÀ KHO HÀNG THỰC TẾ]:
+- Website saigoncacanh.com chỉ dùng để chứa thông tin giới thiệu, hướng dẫn kỹ thuật nuôi cá và bài viết chia sẻ kinh nghiệm (Hãy hướng dẫn khách đọc bài viết ở đây để tham khảo).
+- Hệ thống POS (pos.saigoncacanh.com) được đưa vào dưới dạng bảng [DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ SẴN TẠI CỬA HÀNG] mới là nơi chứa sản phẩm, giá bán và số lượng tồn kho THỰC TẾ đang có tại tiệm. Bạn PHẢI ưu tiên giới thiệu các sản phẩm thực tế có sẵn này và báo đúng giá bán tại tiệm cho khách hàng.";
 
 if (isset($data['contents'][0]['parts'][0]['text'])) {
     $data['contents'][0]['parts'][0]['text'] .= $location_instruction;

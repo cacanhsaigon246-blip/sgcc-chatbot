@@ -335,10 +335,32 @@ Cấu trúc câu trả lời gợi ý:
 - 📖 "Anh/chị tham khảo thêm hướng dẫn chi tiết tại đây nhé: [Tên bài viết](Link bài viết)"
 - 🛍️ "Để mua sản phẩm/thuốc chính hãng giao nhanh, anh/chị ghé Siêu thị Shopee bên em ạ: https://shop.saigoncacanh.com"`;
 
+  // Lọc tìm sản phẩm khớp từ kho hàng thực tế (POS CSV)
+  let posProductsContext = '';
+  try {
+    if (state.products && state.products.length > 0) {
+      const qWords = message.toLowerCase().split(/\s+/);
+      const matched = state.products.filter(p => {
+        const pName = (p.name || '').toLowerCase();
+        return qWords.some(word => word.length > 2 && pName.includes(word));
+      }).slice(0, 8); // Lấy tối đa 8 sản phẩm khớp nhất
+
+      if (matched.length > 0) {
+        posProductsContext = "\n\n[DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ SẴN TẠI CỬA HÀNG - TRÍCH XUẤT TỪ HỆ THỐNG POS.SAIGONCACANH.COM]:\n";
+        matched.forEach(p => {
+          posProductsContext += `- ${p.name} (Giá bán: ${parseInt(p.sellPrice || 0).toLocaleString('vi-VN')}đ, Tồn kho hiện có tại shop: ${p.qty || 0}, Size: ${p.size || 'Mặc định'})\n`;
+        });
+        posProductsContext += "\nKhi tư vấn giá và mua bán, bạn PHẢI ưu tiên giới thiệu các sản phẩm đang có sẵn này kèm giá bán chính xác của nó tại shop.";
+      }
+    }
+  } catch (e) {
+    console.warn('[SGCC] Loi phan tich san pham tu kho POS:', e);
+  }
+
   const contents = [
     {
       role: 'user',
-      parts: [{ text: `${systemInstruction}\n\nCâu hỏi của khách: ${message}` }]
+      parts: [{ text: `${systemInstruction}${posProductsContext}\n\nCâu hỏi của khách: ${message}` }]
     }
   ];
 
