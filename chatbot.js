@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Phát hiện người dùng từ WordPress
   const urlParams = new URLSearchParams(window.location.search);
-  const wpUser = urlParams.get('wp_user');
-  const wpEmail = urlParams.get('wp_email');
+  const wpUser = urlParams.get('wp_user') || urlParams.get('user_name');
+  const wpEmail = urlParams.get('wp_email') || urlParams.get('user_email');
   if (wpUser) {
     state.user = {
       name: wpUser,
@@ -43,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     localStorage.setItem('sgcc_user', JSON.stringify(state.user));
     registerMemberOnServer(wpUser);
+
+    // LẬP TỨC XÓA SẠCH BỘ ĐẾM TIN NHẮN KHÁCH VÃNG LAI
+    state.guestMsgCount = 0;
+    localStorage.setItem('sgcc_guest_count', '0');
   } else {
     // Chỉ đăng xuất/xóa session đồng bộ WordPress nếu WordPress báo đã đăng xuất (wp_user bị unset trên trang có class logged-in bị mất)
     // Nếu là phiên đăng nhập trực tiếp Google Auth (có credential) thì giữ nguyên.
