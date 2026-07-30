@@ -73,6 +73,25 @@ if (empty($api_key)) {
     exit();
 }
 
+// Tự động chèn Quy tắc Q&A huấn luyện từ Admin Panel vào nội dung câu hỏi
+$qa_file = __DIR__ . '/qa_pairs.json';
+if (file_exists($qa_file)) {
+    $qa_data = json_decode(file_get_contents($qa_file), true);
+    if (is_array($qa_data) && !empty($qa_data)) {
+        $qa_rules = "\n\n[QUY TẮC TRẢ LỜI QUAN TRỌNG ĐƯỢC CHỈ ĐỊNH BỞI CỬA HÀNG - HÃY TUÂN THỦ TUYỆT ĐỐI]:\n";
+        foreach ($qa_data as $qa) {
+            if (!empty($qa['question']) && !empty($qa['answer'])) {
+                $qa_rules .= "- Khách hỏi: \"" . $qa['question'] . "\"\n  Hãy trả lời đúng như sau: \"" . $qa['answer'] . "\"\n";
+            }
+        }
+        $qa_rules .= "\nNếu câu hỏi của khách hàng trùng khớp hoặc gần giống với các câu hỏi trên, bạn PHẢI sử dụng câu trả lời tương ứng được chỉ định ở trên thay vì tự ý bịa đặt.";
+        
+        if (isset($data['contents'][0]['parts'][0]['text'])) {
+            $data['contents'][0]['parts'][0]['text'] .= $qa_rules;
+        }
+    }
+}
+
 // ── CALL GEMINI API ───────────────────────────────────────────
 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
 

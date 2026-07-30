@@ -210,6 +210,7 @@
         <button onclick="showSection('chatlogs',this)">💬 Lịch Sử Chat</button>
         <button onclick="showSection('products',this)">📦 Sản Phẩm CSV</button>
         <button onclick="showSection('apikey',this)">🔑 API Key</button>
+        <button onclick="showSection('qa',this)">🗣️ Quy Tắc Q&A</button>
         <button onclick="showSection('members',this)">👥 Thành Viên</button>
         <button onclick="showSection('embed',this)">🔗 Nhúng WordPress</button>
       </div>
@@ -410,6 +411,43 @@
         </div>
       </section>
 
+      <!-- Q&A RULES -->
+      <section class="admin-section" id="sec-qa">
+        <h2>🗣️ Quy Tắc Trả Lời Chỉ Định (Q&A)</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
+          Nơi anh Phát dạy Bot cách trả lời chi tiết cho những câu hỏi cụ thể của khách hàng (ví dụ: mẹo chữa bệnh cá, giá dịch vụ setup hồ...). Bot sẽ luôn ưu tiên trả lời đúng y hệt câu anh viết ở đây.
+        </p>
+
+        <div class="form-card">
+          <h3>➕ Thêm Quy Tắc Trả Lời Mới</h3>
+          <div style="margin-bottom:14px">
+            <label>Câu hỏi của khách (hoặc từ khóa chính)</label>
+            <input type="text" id="qa-question" placeholder="Ví dụ: cá rồng bị đục mắt..." />
+          </div>
+          <div style="margin-bottom:14px">
+            <label>Câu trả lời của AI Bot (Hãy soạn thảo chi tiết và chèn link Shopee/Zalo nếu cần)</label>
+            <textarea id="qa-answer" style="min-height:120px" placeholder="Ví dụ: Anh khuyên dùng thuốc A, thay nước 20% và tăng sưởi lên 30 độ nhé..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="addQAPair()">➕ Thêm Quy Tắc</button>
+        </div>
+
+        <div class="form-card">
+          <h3>📋 Danh Sách Quy Tắc Q&A Hiện Tại</h3>
+          <div style="overflow-x:auto">
+            <table id="qa-table">
+              <thead><tr>
+                <th style="width:30%">Câu hỏi của khách</th>
+                <th style="width:60%">Câu trả lời được chỉ định</th>
+                <th style="width:10%">Hành động</th>
+              </tr></thead>
+              <tbody id="qa-tbody">
+                <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Đang tải danh sách hỏi đáp...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- EMBED -->
       <section class="admin-section" id="sec-embed">
         <h2>🔗 Nhúng Widget Vào WordPress</h2>
@@ -534,6 +572,7 @@
     renderKnowledgeTags();
     loadChatLogsTable();
     loadMembersTable();
+    loadQATable();
   }
 
   // ── CHAT LOGS ──
@@ -766,6 +805,92 @@
   function saveGoogleClientId() {
     const id = document.getElementById('google-client-id').value.trim();
     if (id) { localStorage.setItem('sgcc_google_client_id', id); showToast('✅ Đã lưu Google Client ID ạ!'); }
+  }
+
+  // ── Q&A RULES ──
+  let qaPairs = [];
+
+  async function loadQATable() {
+    const tbody = document.getElementById('qa-tbody');
+    try {
+      const res = await fetch('get_qa.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.qa) {
+        qaPairs = data.qa;
+        renderQATable();
+      } else {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải dữ liệu Q&A.</td></tr>';
+      }
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối API Q&A.</td></tr>';
+    }
+  }
+
+  function renderQATable() {
+    const tbody = document.getElementById('qa-tbody');
+    if (!qaPairs.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Chưa có quy tắc Q&A nào. Anh Phát có thể thêm ở trên nhé!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = qaPairs.map((item, idx) => `
+      <tr>
+        <td><strong>${escapeHtml(item.question)}</strong></td>
+        <td>${escapeHtml(item.answer).replace(/\n/g, '<br/>')}</td>
+        <td>
+          <button class="btn-danger" onclick="deleteQAPair(${idx})">🗑️ Xóa</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function addQAPair() {
+    const qEl = document.getElementById('qa-question');
+    const aEl = document.getElementById('qa-answer');
+    const q = qEl.value.trim();
+    const a = aEl.value.trim();
+
+    if (!q || !a) {
+      showToast('⚠️ Vui lòng nhập đầy đủ câu hỏi và câu trả lời ạ!');
+      return;
+    }
+
+    qaPairs.push({ question: q, answer: a });
+    
+    if (await saveQAPairsToServer()) {
+      qEl.value = '';
+      aEl.value = '';
+      renderQATable();
+      showToast('✅ Đã thêm quy tắc Q&A thành công!');
+    }
+  }
+
+  async function deleteQAPair(idx) {
+    if (!confirm('Anh có chắc muốn xóa quy tắc Q&A này không ạ?')) return;
+    qaPairs.splice(idx, 1);
+    if (await saveQAPairsToServer()) {
+      renderQATable();
+      showToast('🗑️ Đã xóa quy tắc Q&A!');
+    }
+  }
+
+  async function saveQAPairsToServer() {
+    try {
+      const res = await fetch('save_qa.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qa: qaPairs, pass: 'sgcacanh2024' })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        return true;
+      } else {
+        showToast('❌ Lỗi: ' + data.message);
+        return false;
+      }
+    } catch (e) {
+      showToast('❌ Lỗi kết nối Server!');
+      return false;
+    }
   }
 
   // ── EMBED CODE ──
