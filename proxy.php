@@ -92,6 +92,31 @@ if (file_exists($qa_file)) {
     }
 }
 
+// Tự động định vị Tỉnh/Thành của khách hàng qua IP để chỉ thị AI
+$client_ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR']);
+$city = 'Không rõ';
+if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
+    // Gọi API định vị nhẹ qua ip-api
+    $geo_res = @file_get_contents("http://ip-api.com/json/" . $client_ip . "?fields=status,city");
+    if ($geo_res) {
+        $geo_data = json_decode($geo_res, true);
+        if (isset($geo_data['status']) && $geo_data['status'] === 'success') {
+            $city = $geo_data['city'] ?? 'Không rõ';
+        }
+    }
+}
+
+$location_instruction = "";
+if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) {
+    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH Ở TP.HCM]: Khách hàng này đang ở khu vực TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp cửa hàng tại địa chỉ: 246 Hồ Văn Huê, Phường Đức Nhuận để lựa chọn cá trực tiếp và nhận tư vấn chuyên sâu từ chủ cửa hàng (anh Phát).";
+} else {
+    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH TỈNH]: Khách hàng này ở ngoài TP.HCM (" . $city . "). Hãy hướng dẫn họ mua sắm Online và tư vấn mua phụ kiện/thuốc chữa bệnh qua Siêu thị Shopee bên em giao hàng nhanh toàn quốc: https://shop.saigoncacanh.com hoặc nhắn Zalo Shop.";
+}
+
+if (isset($data['contents'][0]['parts'][0]['text'])) {
+    $data['contents'][0]['parts'][0]['text'] .= $location_instruction;
+}
+
 // ── CALL GEMINI API ───────────────────────────────────────────
 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
 

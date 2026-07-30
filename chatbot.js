@@ -28,7 +28,7 @@ let state = {
 
 // ─── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  localStorage.removeItem('sgcc_guest_count'); // Dọn dẹp rác giới hạn cũ
+  // Không xóa sgcc_guest_count để duy trì giới hạn tin nhắn khách vãng lai
   createOceanAnimations();
   
   // Phát hiện người dùng từ WordPress
@@ -150,7 +150,12 @@ function updateUserBar() {
 
 // ─── MESSAGE LIMIT (Đã mở khóa hoàn toàn 100%) ────────────────
 function checkMessageLimit() {
-  return true; // Cho phép chat không giới hạn
+  if (!state.user) {
+    if (state.guestMsgCount >= CONFIG.GUEST_MESSAGE_LIMIT) {
+      return false; // Đã đạt giới hạn
+    }
+  }
+  return true; // Cho phép chat
 }
 
 function incrementGuestCount() {
@@ -204,6 +209,17 @@ async function sendMessage() {
   const hasImage = !!state.pendingImage;
 
   if (!text && !hasImage) return;
+
+  // Kiểm tra giới hạn tin nhắn đối với khách vãng lai
+  if (!checkMessageLimit()) {
+    hideTyping();
+    addBotMessage(`💡 **Trợ lý AI đã tư vấn hết 5 lượt câu hỏi miễn phí dành cho khách vãng lai ạ.**\n\nĐể tiếp tục trò chuyện không giới hạn, anh/chị vui lòng nhấn nút **ĐĂNG NHẬP** ở góc trên bên phải website saigoncacanh.com để kích hoạt thành viên (Hoàn toàn miễn phí và nhanh chóng ạ!).`);
+    input.value = '';
+    return;
+  }
+
+  // Tăng đếm tin nhắn khách vãng lai
+  incrementGuestCount();
 
   state.isTyping = true;
   const sendBtn = document.getElementById('send-btn');

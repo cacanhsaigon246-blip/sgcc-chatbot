@@ -400,11 +400,12 @@
             <table id="members-table">
               <thead><tr>
                 <th>Tên Thành Viên</th>
+                <th>Vị Trí (Tỉnh/Thành)</th>
                 <th>Lần Đầu Xuất Hiện</th>
                 <th>Hoạt Động Cuối Cùng</th>
               </tr></thead>
               <tbody id="members-tbody">
-                <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Đang tải thành viên...</td></tr>
+                <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Đang tải thành viên...</td></tr>
               </tbody>
             </table>
           </div>
@@ -688,18 +689,19 @@
       const data = await res.json();
       if (data.status === 'ok' && data.members) {
         if (!data.members.length) {
-          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Chưa có thành viên nào hoạt động.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có thành viên nào hoạt động.</td></tr>';
           return;
         }
         tbody.innerHTML = data.members.map(m => `
           <tr>
             <td><strong>${escapeHtml(m.name || '—')}</strong></td>
+            <td><span class="badge blue">${escapeHtml(m.location || 'Không rõ')}</span></td>
             <td style="color:var(--muted);font-size:12px">${m.first_seen || '—'}</td>
             <td style="color:var(--accent);font-size:12px">${m.last_active || '—'}</td>
           </tr>
         `).join('');
       } else {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải dữ liệu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải dữ liệu.</td></tr>';
       }
     } catch (e) {
       tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối API thành viên.</td></tr>';

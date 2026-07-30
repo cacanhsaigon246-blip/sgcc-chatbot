@@ -17,6 +17,23 @@ if (empty($question)) {
 $now = date('Y-m-d H:i:s');
 $time_str = date('H:i d/m/Y');
 
+$client_ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR']);
+$city = 'Không rõ';
+if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
+    $geo_res = @file_get_contents("http://ip-api.com/json/" . $client_ip . "?fields=status,city");
+    if ($geo_res) {
+        $geo_data = json_decode($geo_res, true);
+        if (isset($geo_data['status']) && $geo_data['status'] === 'success') {
+            $city = $geo_data['city'] ?? 'Không rõ';
+        }
+    }
+}
+if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) $city = 'TP.HCM';
+else if (stripos($city, 'Hanoi') !== false) $city = 'Hà Nội';
+else if (stripos($city, 'Da Nang') !== false) $city = 'Đà Nẵng';
+
+$user = $user . ' (' . $city . ')';
+
 // 1. Lưu vào nhật ký chat chung
 $log_file = __DIR__ . '/server_chat_logs.json';
 $logs = [];
