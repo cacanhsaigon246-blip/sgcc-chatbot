@@ -446,6 +446,25 @@
             </table>
           </div>
         </div>
+
+        <div class="form-card" style="margin-top:20px">
+          <h3>💡 Gợi Ý Câu Hỏi Khách Hay Hỏi (Hoặc AI chưa trả lời chuẩn)</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+            Đây là danh sách những câu hỏi thực tế từ khách hàng mà Chatbot chưa biết cách trả lời chính xác (phải dùng câu dự phòng). Anh chỉ cần nhấn <strong>"Thêm nhanh câu trả lời"</strong> để huấn luyện cho Bot.
+          </p>
+          <div style="overflow-x:auto">
+            <table id="unanswered-table">
+              <thead><tr>
+                <th style="width:60%">Câu hỏi của khách</th>
+                <th style="width:20%">Số lần hỏi</th>
+                <th style="width:20%">Hành động</th>
+              </tr></thead>
+              <tbody id="unanswered-tbody">
+                <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Đang tải câu hỏi gợi ý...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <!-- EMBED -->
@@ -573,24 +592,34 @@
     loadChatLogsTable();
     loadMembersTable();
     loadQATable();
+    loadUnansweredTable();
   }
 
   // ── CHAT LOGS ──
-  function loadChatLogsTable() {
-    const logs = JSON.parse(localStorage.getItem('sgcc_chat_logs') || '[]');
+  async function loadChatLogsTable() {
     const tbody = document.getElementById('chatlogs-tbody');
-    if (!logs || !logs.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có nhật ký trò chuyện. Khi khách chat trên web, nội dung sẽ hiện ở đây ạ!</td></tr>';
-      return;
+    try {
+      const res = await fetch('get_chat_logs.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.logs) {
+        if (!data.logs.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có nhật ký trò chuyện thực tế từ khách hàng.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.logs.map(item => `
+          <tr>
+            <td style="color:var(--muted);font-size:11px;white-space:nowrap">${item.time || '—'}</td>
+            <td><strong>${escapeHtml(item.user || 'Khách vãng lai')}</strong></td>
+            <td style="color:var(--accent)">${escapeHtml(item.question || '')}</td>
+            <td style="color:var(--text);font-size:12px">${escapeHtml(item.answer || '')}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải nhật ký chat từ server.</td></tr>';
+      }
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối API nhật ký chat.</td></tr>';
     }
-    tbody.innerHTML = logs.map(item => `
-      <tr>
-        <td style="color:var(--muted);font-size:11px;white-space:nowrap">${item.time || '—'}</td>
-        <td><strong>${item.user || 'Khách vãng lai'}</strong></td>
-        <td style="color:var(--accent)">${escapeHtml(item.question || '')}</td>
-        <td style="color:var(--text);font-size:12px">${escapeHtml(item.answer || '')}</td>
-      </tr>
-    `).join('');
   }
 
   function clearChatLogs() {
@@ -857,9 +886,12 @@
     qaPairs.push({ question: q, answer: a });
     
     if (await saveQAPairsToServer()) {
+      // Xóa câu hỏi khỏi danh sách chưa trả lời trên server nếu trùng khớp
+      await deleteUnansweredFromServer(q);
       qEl.value = '';
       aEl.value = '';
       renderQATable();
+      loadUnansweredTable();
       showToast('✅ Đã thêm quy tắc Q&A thành công!');
     }
   }
@@ -891,6 +923,50 @@
       showToast('❌ Lỗi kết nối Server!');
       return false;
     }
+  }
+
+  async function loadUnansweredTable() {
+    const tbody = document.getElementById('unanswered-tbody');
+    try {
+      const res = await fetch('get_unanswered.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.questions) {
+        if (!data.questions.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Tuyệt vời! Không có câu hỏi gợi ý nào chưa trả lời.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.questions.map(q => `
+          <tr>
+            <td><strong>${escapeHtml(q.question)}</strong></td>
+            <td style="color:var(--accent)">${q.count} lần</td>
+            <td>
+              <button class="btn-primary" style="padding:4px 8px;font-size:11px" onclick="quickAddQA('${escapeHtml(q.question).replace(/'/g, "\\'")}')">➕ Thêm nhanh</button>
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải câu hỏi gợi ý.</td></tr>';
+      }
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối gợi ý.</td></tr>';
+    }
+  }
+
+  function quickAddQA(question) {
+    document.getElementById('qa-question').value = question;
+    document.getElementById('qa-answer').focus();
+    document.getElementById('sec-qa').scrollIntoView({ behavior: 'smooth' });
+    showToast('💡 Đã điền câu hỏi! Anh viết câu trả lời và nhấn Thêm nhé.');
+  }
+
+  async function deleteUnansweredFromServer(question) {
+    try {
+      await fetch('delete_unanswered.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question, pass: 'sgcacanh2024' })
+      });
+    } catch(e) {}
   }
 
   // ── EMBED CODE ──

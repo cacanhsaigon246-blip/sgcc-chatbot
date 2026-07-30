@@ -230,7 +230,7 @@ async function sendMessage() {
     if (lowerText.includes('tư vấn viên') || lowerText.includes('anh phát') || lowerText.includes('chủ shop') || lowerText.includes('người thật') || lowerText.includes('gặp nhân viên') || lowerText.includes('trực tiếp')) {
       hideTyping();
       addBotMessage(`Dạ em chuyển kết nối đến **Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo hỗ trợ chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Trực Tiếp Qua Zalo Shop</a></div>`);
-      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Shop');
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Shop', false);
       return;
     }
 
@@ -238,12 +238,12 @@ async function sendMessage() {
       const reply = await callBackendSSE(messageText);
       hideTyping();
       findAndShowArticle(reply, messageText);
-      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply, false);
     } catch (err) {
       hideTyping();
       const smartReply = searchSmartFallback(messageText);
       addBotMessage(smartReply);
-      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, smartReply);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, smartReply, true);
     }
   } catch (e) {
     console.error('Send message error:', e);
@@ -256,13 +256,26 @@ async function sendMessage() {
 }
 
 // ─── LƯU LOG CHAT BÁO CÁO ADMIN ─────────────────────────────
-function saveChatLog(user, question, answer) {
+function saveChatLog(user, question, answer, isFallback = false) {
+  // 1. Lưu cục bộ trình duyệt (để truy xuất nhanh tại chỗ nếu cần)
   const logs = JSON.parse(localStorage.getItem('sgcc_chat_logs') || '[]');
   const now = new Date();
   const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('vi-VN');
   logs.unshift({ time: timeStr, user: user, question: question, answer: answer.slice(0, 150) + (answer.length > 150 ? '...' : '') });
-  if (logs.length > 100) logs.pop(); // Giữ 100 log gần nhất
+  if (logs.length > 100) logs.pop();
   localStorage.setItem('sgcc_chat_logs', JSON.stringify(logs));
+
+  // 2. Đồng bộ đẩy trực tiếp lên server Hostinger để Admin xem ở thiết bị khác
+  fetch('save_chat_log.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user: user,
+      question: question,
+      answer: answer,
+      isFallback: isFallback
+    })
+  }).catch(e => console.error('[SGCC] Loi luu log chat len server:', e));
 }
 
 // ─── SMART FALLBACK TỪ KHO KIẾN THỨC (CẤU TRÚC 3 PHẦN: ADSENSE + SHOPEE) ────
