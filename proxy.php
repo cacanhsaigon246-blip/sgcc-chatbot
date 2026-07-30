@@ -131,6 +131,107 @@ if (isset($data['contents'][0]['parts'][0]['text'])) {
     $data['contents'][0]['parts'][0]['text'] .= $location_instruction;
 }
 
+// Tải và khớp từ khóa với sản phẩm POS thực tế, sản phẩm WooCommerce và bài viết WordPress
+$question = '';
+if (isset($data['contents'][0]['parts'][0]['text'])) {
+    $prompt_text = $data['contents'][0]['parts'][0]['text'];
+    $parts_lines = explode("\n", $prompt_text);
+    foreach (array_reverse($parts_lines) as $line) {
+        if (stripos($line, 'Câu hỏi của khách:') !== false) {
+            $question = trim(str_ireplace('Câu hỏi của khách:', '', $line));
+            break;
+        }
+    }
+    if (empty($question)) {
+        $question = $prompt_text;
+    }
+}
+
+$matching_context = "";
+
+if (!empty($question)) {
+    $q_words = preg_split('/\s+/', mb_strtolower($question, 'UTF-8'));
+    $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 2; });
+
+    if (!empty($q_words)) {
+        // 1. Tìm trong sản phẩm POS thực tế (pos_products.json) - Ưu tiên 1
+        $pos_file = __DIR__ . '/pos_products.json';
+        if (file_exists($pos_file)) {
+            $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
+            $matched_pos = [];
+            foreach ($pos_products as $p) {
+                $p_name = mb_strtolower($p['name'] ?? '', 'UTF-8');
+                foreach ($q_words as $w) {
+                    if (strpos($p_name, $w) !== false) {
+                        $matched_pos[] = $p;
+                        break;
+                    }
+                }
+            }
+            $matched_pos = array_slice($matched_pos, 0, 8);
+            if (!empty($matched_pos)) {
+                $matching_context .= "\n\n[DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ TRỰC TIẾP TẠI KHO - ƯU TIÊN GIỚI THIỆU HÀNG ĐẦU (pos.saigoncacanh.com)]:\n";
+                foreach ($matched_pos as $p) {
+                    $matching_context .= "- Tên: " . $p['name'] . " | Giá bán tại tiệm: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ | Tồn kho hiện tại: " . ($p['qty'] ?? 0) . " | Size: " . ($p['size'] ?? '—') . "\n";
+                }
+                $matching_context .= "-> Bạn hãy dùng các sản phẩm thực tế ở trên để báo giá chính xác và khẳng định ĐANG CÓ SẴN TẠI TIỆM cho khách.";
+            }
+        }
+
+        // 2. Tìm trong sản phẩm WooCommerce trên website (woocommerce_products.json) - Ưu tiên 2
+        $woo_file = __DIR__ . '/woocommerce_products.json';
+        if (file_exists($woo_file)) {
+            $woo_products = json_decode(file_get_contents($woo_file), true) ?: [];
+            $matched_woo = [];
+            foreach ($woo_products as $p) {
+                $p_name = mb_strtolower($p['name'] ?? '', 'UTF-8');
+                foreach ($q_words as $w) {
+                    if (strpos($p_name, $w) !== false) {
+                        $matched_woo[] = $p;
+                        break;
+                    }
+                }
+            }
+            $matched_woo = array_slice($matched_woo, 0, 5);
+            if (!empty($matched_woo)) {
+                $matching_context .= "\n\n[SẢN PHẨM KHÁC TRÊN WEBSITE SAIGONCACANH.COM (THÔNG TIN THAM KHẢO - ƯU TIÊN 2)]:\n";
+                foreach ($matched_woo as $p) {
+                    $matching_context .= "- " . $p['name'] . " | Xem chi tiết: " . ($p['link'] ?? 'https://saigoncacanh.com') . "\n";
+                }
+                $matching_context .= "-> Hãy nói rõ đây là sản phẩm giới thiệu trên web chính, anh nhắn số điện thoại để em kiểm tra xem kho hàng thực tế (POS) còn hàng sẵn không nhé.";
+            }
+        }
+
+        // 3. Tìm trong bài viết WordPress (wordpress_posts.json) - Ưu tiên 3
+        $posts_file = __DIR__ . '/wordpress_posts.json';
+        if (file_exists($posts_file)) {
+            $posts_data = json_decode(file_get_contents($posts_file), true) ?: [];
+            $matched_posts = [];
+            foreach ($posts_data as $post) {
+                $post_name = mb_strtolower($post['name'] ?? '', 'UTF-8');
+                foreach ($q_words as $w) {
+                    if (strpos($post_name, $w) !== false) {
+                        $matched_posts[] = $post;
+                        break;
+                    }
+                }
+            }
+            $matched_posts = array_slice($matched_posts, 0, 3);
+            if (!empty($matched_posts)) {
+                $matching_context .= "\n\n[BÀI VIẾT HƯỚNG DẪN CHI TIẾT TỪ WEBSITE SAIGONCACANH.COM - HÃY GỢI Ý LINK CHO KHÁCH ĐỌC THÊM]:\n";
+                foreach ($matched_posts as $post) {
+                    $matching_context .= "- Hướng dẫn: \"" . $post['name'] . "\" -> Đường dẫn bài viết: " . ($post['link'] ?? '') . "\n";
+                }
+            }
+        }
+    }
+}
+
+// Chèn toàn bộ ngữ cảnh tìm kiếm vào trước câu hỏi
+if (!empty($matching_context) && isset($data['contents'][0]['parts'][0]['text'])) {
+    $data['contents'][0]['parts'][0]['text'] .= $matching_context;
+}
+
 // ── CALL GEMINI API ───────────────────────────────────────────
 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
 

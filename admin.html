@@ -314,32 +314,41 @@
 
       <!-- PRODUCTS -->
       <section class="admin-section" id="sec-products">
-        <h2>📦 Nạp Sản Phẩm Từ POS & Web saigoncacanh.com</h2>
+        <h2>📦 Nạp Dữ Liệu Từ POS & saigoncacanh.com</h2>
 
-        <div class="form-card">
-          <h3>🔄 Tự Động Đồng Bộ Từ saigoncacanh.com (WooCommerce)</h3>
+        <div class="form-card" style="margin-bottom:20px">
+          <h3>✍️ 1. Đồng Bộ Bài Viết Hướng Dẫn (WordPress Posts)</h3>
           <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
-            Tự động cập nhật sản phẩm & giá bán từ trang web chính sang Chatbot không cần nạp thủ công.
+            Tải các bài viết kỹ thuật nuôi cá rồng, cá cảnh, lọc nước từ saigoncacanh.com làm tài liệu đính kèm cho Chatbot.
           </p>
-          <button class="btn-primary" onclick="syncWooCommerceProducts()">🔄 Đồng Bộ Sản Phẩm Ngay</button>
-          <div id="sync-status" style="margin-top:10px;font-size:13px"></div>
+          <button class="btn-primary" onclick="syncWordPressPosts()">✍️ Đồng Bộ Bài Viết Ngay</button>
+          <div id="sync-posts-status" style="margin-top:10px;font-size:13px"></div>
         </div>
 
-        <div class="form-card">
-          <h3>📤 Xuất CSV Từ POS</h3>
-          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
-            1. Anh vào <a href="https://pos.saigoncacanh.com" target="_blank" style="color:var(--accent)">pos.saigoncacanh.com</a><br/>
-            2. Vào trang <strong>Kho Hàng</strong><br/>
-            3. Nhấn nút <strong style="color:var(--success)">📥 Xuất Excel</strong><br/>
-            4. Upload file CSV vào đây 👇
+        <div class="form-card" style="margin-bottom:20px">
+          <h3>🛒 2. Đồng Bộ Sản Phẩm Giới Thiệu (WooCommerce Web)</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
+            Đồng bộ thông tin catalog sản phẩm giới thiệu từ website chính để làm nguồn thông tin bổ trợ.
           </p>
-          <div class="upload-zone" onclick="document.getElementById('csv-file').click()">
-            <input type="file" id="csv-file" accept=".csv,.xlsx" onchange="handleCSVUpload(event)" />
+          <button class="btn-primary" onclick="syncWooCommerceProducts()">🛒 Đồng Bộ Sản Phẩm Web Ngay</button>
+          <div id="sync-products-status" style="margin-top:10px;font-size:13px"></div>
+        </div>
+
+        <div class="form-card" style="margin-bottom:20px">
+          <h3>📤 3. Nạp Kho Hàng Thực Tế (POS - ƯU TIÊN CAO NHẤT)</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+            Nạp kho hàng thực tế đang có sẵn tại tiệm để Chatbot ưu tiên báo giá chuẩn xác & khẳng định hàng có sẵn.<br/>
+            1. Anh vào <a href="https://pos.saigoncacanh.com" target="_blank" style="color:var(--accent)">pos.saigoncacanh.com</a> → <strong>Kho Hàng</strong><br/>
+            2. Nhấn nút <strong>📥 Xuất Excel/CSV</strong><br/>
+            3. Upload file đó trực tiếp vào đây để lưu lên máy chủ:
+          </p>
+          <div class="upload-zone" onclick="document.getElementById('pos-csv-file').click()">
+            <input type="file" id="pos-csv-file" style="display:none" accept=".csv" onchange="handleCSVUpload(event)" />
             <div class="icon">📂</div>
-            <p>Kéo thả hoặc <strong>click để chọn file CSV</strong></p>
-            <p style="font-size:11px;margin-top:4px">Hỗ trợ file .csv từ POS</p>
+            <p>Kéo thả hoặc <strong>click để chọn file CSV từ POS</strong></p>
+            <p style="font-size:11px;margin-top:4px">Được định dạng chuẩn hóa & lưu trữ trên Server Hostinger</p>
           </div>
-          <div id="upload-status" style="font-size:13px;display:none"></div>
+          <div id="upload-status" style="margin-top:14px;font-size:13px;display:none"></div>
         </div>
 
         <div class="form-card">
@@ -637,27 +646,54 @@
   }
 
   // ── WOOCOMMERCE SYNC ──
-  async function syncWooCommerceProducts() {
-    const statusEl = document.getElementById('sync-status');
-    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Đang kết nối saigoncacanh.com đồng bộ sản phẩm...</span>';
+  async function syncWordPressPosts() {
+    const statusEl = document.getElementById('sync-posts-status');
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Đang đồng bộ bài viết kỹ thuật từ saigoncacanh.com...</span>';
     try {
-      const res = await fetch('sync_woocommerce.php');
+      const res = await fetch('sync_woocommerce.php?type=posts');
       const data = await res.json();
       if (data.status === 'success') {
-        const count = data.count || 0;
-        statusEl.innerHTML = `<span style="color:var(--success)">✅ Đồng bộ thành công ${count} sản phẩm/bài viết từ web chính!</span>`;
-        showToast(`✅ Đã đồng bộ ${count} sản phẩm từ saigoncacanh.com ạ!`);
+        const count = data.posts_count || 0;
+        statusEl.innerHTML = `<span style="color:var(--success)">✅ Đồng bộ thành công ${count} bài viết từ web chính!</span>`;
+        showToast(`✅ Đã đồng bộ ${count} bài viết hướng dẫn ạ!`);
       } else {
-        statusEl.innerHTML = `<span style="color:var(--danger)">⚠️ ${data.message || 'Lỗi đồng bộ!'}</span>`;
+        statusEl.innerHTML = `<span style="color:var(--danger)">⚠️ ${data.message || 'Lỗi đồng bộ bài viết!'}</span>`;
       }
     } catch (e) {
-      statusEl.innerHTML = '<span style="color:var(--danger)">❌ Không thể kết nối API saigoncacanh.com. Anh có thể dùng nạp CSV nhé ạ!</span>';
+      statusEl.innerHTML = '<span style="color:var(--danger)">❌ Lỗi kết nối API bài viết saigoncacanh.com.</span>';
+    }
+  }
+
+  async function syncWooCommerceProducts() {
+    const statusEl = document.getElementById('sync-products-status');
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Đang đồng bộ danh mục sản phẩm từ saigoncacanh.com...</span>';
+    try {
+      const res = await fetch('sync_woocommerce.php?type=products');
+      const data = await res.json();
+      if (data.status === 'success') {
+        const count = data.products_count || 0;
+        statusEl.innerHTML = `<span style="color:var(--success)">✅ Đồng bộ thành công ${count} sản phẩm giới thiệu từ web chính!</span>`;
+        showToast(`✅ Đã đồng bộ ${count} sản phẩm web ạ!`);
+      } else {
+        statusEl.innerHTML = `<span style="color:var(--danger)">⚠️ ${data.message || 'Lỗi đồng bộ sản phẩm!'}</span>`;
+      }
+    } catch (e) {
+      statusEl.innerHTML = '<span style="color:var(--danger)">❌ Lỗi kết nối API sản phẩm saigoncacanh.com.</span>';
     }
   }
 
   async function updateStats() {
-    const products = JSON.parse(localStorage.getItem('sgcc_products') || '[]');
-    document.getElementById('stat-products').textContent = products.length;
+    try {
+      const res = await fetch('get_pos_products.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.products) {
+        document.getElementById('stat-products').textContent = data.products.length;
+      } else {
+        document.getElementById('stat-products').textContent = '0';
+      }
+    } catch(e) {
+      document.getElementById('stat-products').textContent = '—';
+    }
     
     try {
       const res = await fetch('get_members.php');
@@ -734,36 +770,66 @@
   }
 
   // ── PRODUCTS ──
-  function loadProductsTable() {
-    const products = JSON.parse(localStorage.getItem('sgcc_products') || '[]');
+  async function loadProductsTable() {
     const tbody = document.getElementById('products-tbody');
-    if (!products.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Chưa có sản phẩm. Anh upload CSV từ POS nhé ạ!</td></tr>';
-      return;
+    try {
+      const res = await fetch('get_pos_products.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.products) {
+        if (!data.products.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Chưa có sản phẩm. Anh upload CSV từ POS nhé ạ!</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.products.map(p => `
+          <tr>
+            <td><strong>${escapeHtml(p.name || '—')}</strong></td>
+            <td><span class="badge blue">${escapeHtml(p.category || '—')}</span></td>
+            <td style="color:var(--muted)">${escapeHtml(p.size || '—')}</td>
+            <td>${escapeHtml(p.qty || '?')}</td>
+            <td style="color:var(--success)">${p.sellPrice ? parseInt(p.sellPrice).toLocaleString('vi-VN') + 'đ' : '?'}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:20px">Không thể tải danh sách sản phẩm.</td></tr>';
+      }
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối máy chủ.</td></tr>';
     }
-    tbody.innerHTML = products.map(p => `
-      <tr>
-        <td><strong>${p.name || '—'}</strong></td>
-        <td><span class="badge blue">${p.category || '—'}</span></td>
-        <td style="color:var(--muted)">${p.size || '—'}</td>
-        <td>${p.qty || '?'}</td>
-        <td style="color:var(--success)">${p.sellPrice ? parseInt(p.sellPrice).toLocaleString('vi-VN') + 'đ' : '?'}</td>
-      </tr>
-    `).join('');
   }
 
-  function handleCSVUpload(event) {
+  async function handleCSVUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const count = loadProductsFromCSV(e.target.result);
-      loadProductsTable();
-      updateStats();
+    reader.onload = async (e) => {
+      const products = loadProductsFromCSV(e.target.result);
+      if (products.length === 0) {
+        showToast('❌ Lỗi: File CSV rỗng hoặc sai định dạng!');
+        return;
+      }
+      
       const status = document.getElementById('upload-status');
       status.style.display = 'block';
-      status.innerHTML = `<span style="color:var(--success)">✅ Đã nạp <strong>${count}</strong> sản phẩm từ CSV thành công! Bot biết tồn kho rồi ạ 🎉</span>`;
-      showToast(`✅ Nạp thành công ${count} sản phẩm ạ!`);
+      status.innerHTML = `<span style="color:var(--accent)">⏳ Đang tải ${products.length} sản phẩm lên máy chủ Hostinger...</span>`;
+      
+      try {
+        const res = await fetch('save_pos_products.php', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ pass: 'sgcacanh2024', products: products })
+        });
+        const json = await res.json();
+        if (json.status === 'ok') {
+          loadProductsTable();
+          updateStats();
+          status.innerHTML = `<span style="color:var(--success)">✅ Đã nạp và đồng bộ thành công <strong>${products.length}</strong> sản phẩm từ POS lên máy chủ Hostinger! 🎉</span>`;
+          showToast(`✅ Nạp thành công ${products.length} sản phẩm POS!`);
+        } else {
+          status.innerHTML = `<span style="color:var(--danger)">❌ Lỗi lưu máy chủ: ${json.message}</span>`;
+        }
+      } catch (err) {
+        status.innerHTML = `<span style="color:var(--danger)">❌ Lỗi kết nối gửi dữ liệu POS lên server.</span>`;
+      }
     };
     reader.readAsText(file, 'UTF-8');
     event.target.value = '';
@@ -771,7 +837,7 @@
 
   function loadProductsFromCSV(csvText) {
     const lines = csvText.trim().split('\n');
-    if (lines.length < 2) return 0;
+    if (lines.length < 2) return [];
     const raw = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
     const mapHeader = (h) => {
       if (h.includes('tên') || h.includes('name')) return 'name';
@@ -788,13 +854,12 @@
     const products = [];
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i].trim()) continue;
-      const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g,''));
+      const vals = parseCSVLine(lines[i]);
       const obj = {};
-      headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
+      headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').trim(); });
       if (obj.name) products.push(obj);
     }
-    localStorage.setItem('sgcc_products', JSON.stringify(products));
-    return products.length;
+    return products;
   }
 
   // ── API KEY ──
