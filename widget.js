@@ -152,8 +152,8 @@
     badge.style.display = 'none';
     document.getElementById('sgcc-tooltip') && document.getElementById('sgcc-tooltip').remove();
 
-    // Lazy load iframe
-    if (!iframe.src) iframe.src = CHAT_URL;
+    // Lazy load iframe (chống cache cứng bằng timestamp)
+    if (!iframe.src) iframe.src = CHAT_URL + '?nocache=' + new Date().getTime();
 
     wrap.classList.add('open');
     btn.classList.add('open');
