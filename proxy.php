@@ -107,10 +107,12 @@ if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
 }
 
 $location_instruction = "";
-if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) {
-    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH Ở TP.HCM]: Khách hàng này đang ở khu vực TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp cửa hàng tại địa chỉ: 246 Hồ Văn Huê, Phường Đức Nhuận để lựa chọn cá trực tiếp và nhận tư vấn chuyên sâu từ chủ cửa hàng (anh Phát).";
+if ($city === 'Không rõ') {
+    $location_instruction = "\n\n[CHỈ THỊ THU THẬP THÔNG TIN]: Vị trí địa lý của khách hàng hiện tại chưa rõ ràng (Không rõ). Hãy tìm thời cơ khéo léo hỏi xem khách ở quận nào của TP.HCM hoặc ở tỉnh nào để tiện báo giá ship chính xác và tư vấn. Khi khách có nhu cầu mua hàng, hãy lịch sự xin Số điện thoại và Địa chỉ chi tiết để shop gọi điện chốt đơn nhanh nhất.";
+} else if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) {
+    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH Ở TP.HCM]: Khách hàng này đang ở khu vực TP.HCM. Hãy nhiệt tình mời họ ghé thăm trực tiếp cửa hàng tại địa chỉ: 246 Hồ Văn Huê, Phường Đức Nhuận để lựa chọn cá trực tiếp và nhận tư vấn chuyên sâu từ chủ cửa hàng (anh Phát). Khi khách có nhu cầu mua hàng hoặc giao tận nơi, hãy khéo léo xin Số điện thoại và Địa chỉ cụ thể để shop gọi hỗ trợ nhé.";
 } else {
-    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH TỈNH]: Khách hàng này ở ngoài TP.HCM (" . $city . "). Hãy hướng dẫn họ mua sắm Online và tư vấn mua phụ kiện/thuốc chữa bệnh qua Siêu thị Shopee bên em giao hàng nhanh toàn quốc: https://shop.saigoncacanh.com hoặc nhắn Zalo Shop.";
+    $location_instruction = "\n\n[CHỈ THỊ ĐỊA LÝ QUAN TRỌNG - KHÁCH TỈNH]: Khách hàng này ở ngoài TP.HCM (" . $city . "). Hãy hướng dẫn họ mua sắm Online và tư vấn mua phụ kiện/thuốc chữa bệnh qua Siêu thị Shopee bên em giao hàng nhanh toàn quốc: https://shop.saigoncacanh.com hoặc nhắn Zalo Shop. Khi khách muốn đặt hàng trực tiếp, hãy khéo léo xin Số điện thoại và Địa chỉ giao hàng để shop gọi tư vấn và vận chuyển.";
 }
 
 if (isset($data['contents'][0]['parts'][0]['text'])) {

@@ -32,6 +32,67 @@ if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) $city =
 else if (stripos($city, 'Hanoi') !== false) $city = 'Hà Nội';
 else if (stripos($city, 'Da Nang') !== false) $city = 'Đà Nẵng';
 
+$raw_user = $user; // Giữ lại tên thô của người dùng
+
+// A. Phân tích trích xuất Số điện thoại từ tin nhắn khách
+$detected_phone = '';
+if (preg_match('/(0[1-9]\d{8})/', $question, $matches)) {
+    $detected_phone = $matches[1];
+}
+
+// B. Phân tích trích xuất Địa chỉ cụ thể từ tin nhắn khách
+$detected_address = '';
+if (preg_match('/(?:địa chỉ|ship đến|ở tại|địa chỉ là|giao đến)\s*[:|-]?\s*([^,\n\.\?]{6,100})/ui', $question, $addr_matches)) {
+    $detected_address = trim($addr_matches[1]);
+}
+
+// C. Nhận dạng Tỉnh/Thành từ các từ khóa trong tin nhắn
+$detected_city = '';
+$cities_list = ['hồ chí minh', 'sài gòn', 'hcm', 'hà nội', 'đà nẵng', 'cần thơ', 'bình dương', 'đồng nai', 'vũng tàu', 'nha trang', 'hải phòng'];
+foreach ($cities_list as $c) {
+    if (stripos($question, $c) !== false) {
+        $detected_city = mb_convert_case($c, MB_CASE_TITLE, 'UTF-8');
+        if ($c === 'hcm' || $c === 'sài gòn' || $c === 'hồ chí minh') $detected_city = 'TP.HCM';
+        break;
+    }
+}
+
+// D. Cập nhật thông tin vào members.json làm Lead
+if ($detected_phone || $detected_address || $detected_city) {
+    $members_file = __DIR__ . '/members.json';
+    $members_data = [];
+    if (file_exists($members_file)) {
+        $members_data = json_decode(file_get_contents($members_file), true) ?: [];
+    }
+    
+    // Nếu là khách vãng lai để lại sđt, đổi tên định danh cho chuyên nghiệp
+    $lead_name = ($raw_user === 'Khách vãng lai') ? 'Khách vãng lai (' . ($detected_phone ?: 'Lead') . ')' : $raw_user;
+    
+    $found_lead = false;
+    foreach ($members_data as &$m) {
+        if ($m['name'] === $lead_name || ($detected_phone && isset($m['phone']) && $m['phone'] === $detected_phone)) {
+            if ($detected_phone) $m['phone'] = $detected_phone;
+            if ($detected_address) $m['address'] = $detected_address;
+            if ($detected_city) $m['location'] = $detected_city;
+            $m['last_active'] = $now;
+            $found_lead = true;
+            break;
+        }
+    }
+    
+    if (!$found_lead) {
+        $members_data[] = [
+            'name' => $lead_name,
+            'phone' => $detected_phone ?: '',
+            'address' => $detected_address ?: '',
+            'location' => $detected_city ?: $city,
+            'first_seen' => $now,
+            'last_active' => $now
+        ];
+    }
+    file_put_contents($members_file, json_encode($members_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+}
+
 $user = $user . ' (' . $city . ')';
 
 // 1. Lưu vào nhật ký chat chung
