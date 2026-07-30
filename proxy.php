@@ -60,7 +60,7 @@ if (empty($api_key) || strpos($api_key, 'AQ.') === 0) {
     }
 }
 
-$model = $data['model'] ?? 'gemini-flash-lite-latest';
+$model = $data['model'] ?? 'gemini-2.0-flash';
 
 // Bỏ apiKey khỏi payload gửi cho Gemini
 if (isset($data['apiKey'])) unset($data['apiKey']);
@@ -90,11 +90,13 @@ if (file_exists($qa_file)) {
     }
 }
 
-// Định vị địa lý của khách hàng
+// Định vị địa lý của khách hàng (giới hạn thời gian kết nối 1.5 giây để tránh bị treo script)
 $client_ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR']);
+$client_ip = explode(',', $client_ip)[0];
 $city = 'Không rõ';
 if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
-    $geo_res = @file_get_contents("http://ip-api.com/json/" . $client_ip . "?fields=status,city");
+    $ctx = stream_context_create(['http' => ['timeout' => 1.5]]);
+    $geo_res = @file_get_contents("http://ip-api.com/json/" . trim($client_ip) . "?fields=status,city", false, $ctx);
     if ($geo_res) {
         $geo_data = json_decode($geo_res, true);
         if (isset($geo_data['status']) && $geo_data['status'] === 'success') {
