@@ -264,6 +264,7 @@ async function sendMessage() {
     try {
       const reply = await callBackendSSE(messageText);
       hideTyping();
+      addBotMessage(reply);
       findAndShowArticle(reply, messageText);
       saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply, false);
     } catch (err) {
