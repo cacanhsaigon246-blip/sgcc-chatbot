@@ -20,46 +20,8 @@
   <div class="fish-container" id="fish-container"></div>
 </div>
 
-<!-- ═══ SETUP OVERLAY (nhập API Key lần đầu) ═══ -->
-<div class="setup-overlay" id="setup-overlay">
-  <div class="setup-box">
-    <div style="font-size:42px;margin-bottom:12px">🐟</div>
-    <h2>Kích hoạt Trợ Lý AI</h2>
-    <p>Để chatbot hoạt động, anh cần Gemini API Key miễn phí từ Google. Chỉ mất 1 phút ạ!</p>
-
-    <div class="setup-steps">
-      <div class="setup-step">
-        <div class="step-num">1</div>
-        <div class="step-text">Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a> — Đăng nhập Gmail</div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">2</div>
-        <div class="step-text">Nhấn <strong style="color:#00c8ff">"Create API Key"</strong> → Copy key</div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">3</div>
-        <div class="step-text">Paste vào ô bên dưới → Nhấn Kích hoạt</div>
-      </div>
-    </div>
-
-    <div class="api-input-wrap">
-      <input type="password" id="api-key-input" placeholder="AIzaSy..." autocomplete="off" />
-      <button class="btn-toggle-key" onclick="toggleKeyVisibility()" id="toggle-key-btn">👁️</button>
-    </div>
-
-    <button class="btn-activate" onclick="activateBot()">
-      ⚡ Kích Hoạt Chatbot
-    </button>
-
-    <p class="setup-note">
-      🔒 Key lưu trong trình duyệt của anh, không gửi đi đâu khác.<br/>
-      Miễn phí ~1.500 câu hỏi/ngày với Gemini Flash.
-    </p>
-  </div>
-</div>
-
 <!-- ═══ MAIN APP ═══ -->
-<div class="app-wrapper" id="app-wrapper" style="display:none">
+<div class="app-wrapper" id="app-wrapper" style="display:flex">
 
   <!-- HEADER -->
   <header class="chat-header">
@@ -76,7 +38,6 @@
         <span>Zalo Shop</span>
       </a>
       <button class="btn-icon-header" onclick="clearChat()" title="Xóa chat">🗑️</button>
-      <button class="btn-icon-header" onclick="showSettings()" title="Cài đặt">⚙️</button>
     </div>
   </header>
 
@@ -143,31 +104,10 @@
 
 
 
-<!-- ═══ SETTINGS MODAL ═══ -->
-<div class="modal-overlay" id="settings-modal" style="display:none">
-  <div class="modal-box glass-modal">
-    <h3>⚙️ Cài Đặt</h3>
-    <div class="settings-group">
-      <label>Gemini API Key</label>
-      <div class="api-input-wrap" style="margin-bottom:0">
-        <input type="password" id="settings-api-key" placeholder="AIzaSy..." />
-        <button class="btn-toggle-key" onclick="toggleSettingsKey()">👁️</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:16px">
-      <button onclick="saveSettings()" class="btn-activate" style="flex:1">💾 Lưu</button>
-      <button onclick="closeSettings()" class="btn-activate" style="flex:1;background:rgba(255,255,255,0.1)">Đóng</button>
-    </div>
-    <p class="setup-note" style="margin-top:12px">
-      Để lấy API Key miễn phí: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>
-    </p>
-  </div>
-</div>
-
 <!-- Scripts -->
-<script src="knowledge-base.js?v=4.4"></script>
-<script src="products.js?v=4.4"></script>
-<script src="chatbot.js?v=4.4"></script>
+<script src="knowledge-base.js?v=4.5"></script>
+<script src="products.js?v=4.5"></script>
+<script src="chatbot.js?v=4.5"></script>
 
 </body>
 </html>

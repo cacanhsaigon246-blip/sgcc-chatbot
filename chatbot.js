@@ -151,18 +151,6 @@ function closeLoginModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// ─── SETTINGS ─────────────────────────────────────────────────
-function showSettings() {
-  document.getElementById('settings-modal').style.display = 'flex';
-}
-function closeSettings() {
-  document.getElementById('settings-modal').style.display = 'none';
-}
-function saveSettings() {
-  closeSettings();
-  showToast('✅ Đã lưu cài đặt ạ');
-}
-
 // ─── WELCOME MESSAGE ──────────────────────────────────────────
 function showWelcomeMessage() {
   const greeting = getGreeting();
@@ -275,9 +263,7 @@ function insertQuestion(text) {
 
 // ─── BACKEND CALL VIA PROXY.PHP ───────────────────────────────
 async function callBackendSSE(message) {
-  const userApiKey = localStorage.getItem('sgcc_api_key') || '';
   const headers = { 'Content-Type': 'application/json' };
-  if (userApiKey) headers['X-Gemini-Key'] = userApiKey;
 
   const systemInstruction = `Bạn là chuyên gia cá cảnh và là trợ lý AI chuyên nghiệp của Sài Gòn Cá Cảnh (saigoncacanh.com).
 Xưng hô: Luôn gọi khách hàng là "anh" hoặc "chị", tự xưng là "em". Thái độ chuyên nghiệp, nhiệt tình, thấu hiểu.

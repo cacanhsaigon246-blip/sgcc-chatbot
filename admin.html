@@ -685,9 +685,27 @@
     document.getElementById('admin-api-key').value = localStorage.getItem('sgcc_api_key') || '';
     document.getElementById('google-client-id').value = localStorage.getItem('sgcc_google_client_id') || '';
   }
-  function saveAdminApiKey() {
+  async function saveAdminApiKey() {
     const key = document.getElementById('admin-api-key').value.trim();
-    if (key) { localStorage.setItem('sgcc_api_key', key); showToast('✅ Đã lưu API Key ạ!'); updateStats(); }
+    if (key) { 
+      localStorage.setItem('sgcc_api_key', key); 
+      try {
+        const res = await fetch('save_key.php', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ key: key, pass: 'sgcacanh2024' })
+        });
+        const json = await res.json();
+        if (json.status === 'ok') {
+          showToast('✅ Đã lưu API Key lên Server ạ!'); 
+          updateStats();
+        } else {
+          showToast('❌ Lỗi: ' + json.message);
+        }
+      } catch (e) {
+        showToast('❌ Lỗi lưu Server!');
+      }
+    }
   }
   function saveGoogleClientId() {
     const id = document.getElementById('google-client-id').value.trim();
