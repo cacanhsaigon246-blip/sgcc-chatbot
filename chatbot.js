@@ -292,7 +292,13 @@ Cấu trúc câu trả lời gợi ý:
   });
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
+    let errText = `HTTP ${res.status}`;
+    try {
+      const errJson = await res.json();
+      if (errJson.error) errText = typeof errJson.error === 'string' ? errJson.error : JSON.stringify(errJson.error);
+    } catch(e) {}
+    console.error('[SGCC] API Error:', errText);
+    throw new Error(errText);
   }
 
   const data = await res.json();
@@ -300,7 +306,9 @@ Cấu trúc câu trả lời gợi ý:
   if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
     fullReply = data.candidates[0].content.parts[0].text;
   } else if (data.error) {
-    throw new Error(typeof data.error === 'string' ? data.error : (data.error.message || 'Lỗi API'));
+    const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || 'Lỗi API');
+    console.error('[SGCC] API Error Data:', errMsg);
+    throw new Error(errMsg);
   }
 
   if (!fullReply) {
