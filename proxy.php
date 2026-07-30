@@ -122,13 +122,34 @@ Khi khách hỏi mua, tư vấn giá, chốt đơn hoặc hỏi về phí ship, 
 2. Kiểm tra Freeship & phí vận chuyển: 'Dạ để em kiểm tra phí giao hàng hỏa tốc tốt nhất và xem đơn mình có được hỗ trợ Freeship không, anh/chị cho em xin số điện thoại và địa chỉ nhận hàng cụ thể nha!'
 3. Gửi hình ảnh/video cá thực tế qua Zalo: 'Dạ các dòng cá tại tiệm đang rất đẹp và khỏe. Anh cho em xin số điện thoại kết nối Zalo để kỹ thuật viên bên em quay video thực tế cá tại tiệm gửi anh xem và lựa chọn cho trực quan nhé!'";
 
-// Chỉ thị phân biệt website thông tin và kho hàng POS thực tế
+// Chỉ thị phân biệt website thông tin và kho hàng POS thực tế & GỢI Ý SẢN PHẨM / BÀI VIẾT LIÊN QUAN
 $location_instruction .= "\n\n[LƯU Ý PHÂN BIỆT KÊNH THÔNG TIN VÀ KHO HÀNG THỰC TẾ]:
 - Website saigoncacanh.com chỉ dùng để chứa thông tin giới thiệu, hướng dẫn kỹ thuật nuôi cá và bài viết chia sẻ kinh nghiệm (Hãy hướng dẫn khách đọc bài viết ở đây để tham khảo).
-- Hệ thống POS (pos.saigoncacanh.com) được đưa vào dưới dạng bảng [DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ SẴN TẠI CỬA HÀNG] mới là nơi chứa sản phẩm, giá bán và số lượng tồn kho THỰC TẾ đang có tại tiệm. Bạn PHẢI ưu tiên giới thiệu các sản phẩm thực tế có sẵn này và báo đúng giá bán tại tiệm cho khách hàng.";
+- Hệ thống POS (pos.saigoncacanh.com) được đưa vào dưới dạng bảng [DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ SẴN TẠI CỬA HÀNG] mới là nơi chứa sản phẩm, giá bán và số lượng tồn kho THỰC TẾ đang có tại tiệm. Bạn PHẢI ưu tiên giới thiệu các sản phẩm thực tế có sẵn này và báo đúng giá bán tại tiệm cho khách hàng.
+
+[BẮT BUỘC GỢI Ý SẢN PHẨM & BÀI VIẾT LIÊN QUAN]:
+- Khi khách hỏi về một loại cá hoặc phụ kiện bất kỳ, bạn PHẢI giới thiệu sản phẩm liên quan trong danh sách bên dưới (ví dụ khách hỏi cá bảy màu, hãy giới thiệu thêm thức ăn cá bảy màu, lọc, sưởi liên quan).
+- Khi khách hỏi hướng dẫn kỹ thuật hoặc bệnh cá, bạn PHẢI đính kèm đường link bài viết hướng dẫn tương ứng được cung cấp dưới đây để khách bấm vào xem chi tiết.";
 
 if (isset($data['contents'][0]['parts'][0]['text'])) {
     $data['contents'][0]['parts'][0]['text'] .= $location_instruction;
+}
+
+// Hàm loại bỏ dấu tiếng Việt để đối khớp không dấu
+function stripAccents($str) {
+    $unicode = array(
+        'a'=>'á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ|A|Á|À|Ả|Ã|Ạ|Ă|Ắ|Ằ|Ẳ|Ẵ|Ặ|Â|Ấ|Ầ|Ẩ|Ẫ|Ậ',
+        'd'=>'đ|D|Đ',
+        'e'=>'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ|E|É|È|Ẻ|Ẽ|Ẹ|Ê|Ế|Ề|Ể|Ễ|Ệ',
+        'i'=>'í|ì|ỉ|ĩ|ị|I|Í|Ì|Ỉ|Ĩ|Ị',
+        'o'=>'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ẫ|ộ|ơ|ớ|ờ|ở|ỡ|ợ|O|Ó|Ò|Ỏ|Õ|Ọ|Ô|Ố|Ồ|Ổ|Ẫ|Ộ|Ơ|Ớ|Ờ|Ở|Ỡ|Ợ',
+        'u'=>'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự|U|Ú|Ù|Ủ|Ũ|Ụ|Ư|Ứ|Ừ|Ử|Ữ|Ự',
+        'y'=>'ý|ỳ|ỷ|ỹ|ỵ|Y|Ý|Ì|Ỷ|Ỹ|Ỵ',
+    );
+    foreach($unicode as $nonUnicode=>$uni) {
+        $str = preg_replace("/($uni)/i", $nonUnicode, $str);
+    }
+    return $str;
 }
 
 // Tải và khớp từ khóa với sản phẩm POS thực tế, sản phẩm WooCommerce và bài viết WordPress
@@ -150,8 +171,10 @@ if (isset($data['contents'][0]['parts'][0]['text'])) {
 $matching_context = "";
 
 if (!empty($question)) {
-    $q_words = preg_split('/\s+/', mb_strtolower($question, 'UTF-8'));
-    $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 2; });
+    // Chuyển câu hỏi sang dạng chữ thường không dấu để so khớp
+    $q_stripped = stripAccents(mb_strtolower($question, 'UTF-8'));
+    $q_words = preg_split('/\s+/', $q_stripped);
+    $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 1; }); // Lọc từ > 1 ký tự
 
     if (!empty($q_words)) {
         // 1. Tìm trong sản phẩm POS thực tế (pos_products.json) - Ưu tiên 1
@@ -160,9 +183,9 @@ if (!empty($question)) {
             $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
             $matched_pos = [];
             foreach ($pos_products as $p) {
-                $p_name = mb_strtolower($p['name'] ?? '', 'UTF-8');
+                $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
                 foreach ($q_words as $w) {
-                    if (strpos($p_name, $w) !== false) {
+                    if (strpos($p_name_stripped, $w) !== false) {
                         $matched_pos[] = $p;
                         break;
                     }
@@ -184,9 +207,9 @@ if (!empty($question)) {
             $woo_products = json_decode(file_get_contents($woo_file), true) ?: [];
             $matched_woo = [];
             foreach ($woo_products as $p) {
-                $p_name = mb_strtolower($p['name'] ?? '', 'UTF-8');
+                $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
                 foreach ($q_words as $w) {
-                    if (strpos($p_name, $w) !== false) {
+                    if (strpos($p_name_stripped, $w) !== false) {
                         $matched_woo[] = $p;
                         break;
                     }
@@ -208,9 +231,9 @@ if (!empty($question)) {
             $posts_data = json_decode(file_get_contents($posts_file), true) ?: [];
             $matched_posts = [];
             foreach ($posts_data as $post) {
-                $post_name = mb_strtolower($post['name'] ?? '', 'UTF-8');
+                $post_name_stripped = stripAccents(mb_strtolower($post['name'] ?? '', 'UTF-8'));
                 foreach ($q_words as $w) {
-                    if (strpos($post_name, $w) !== false) {
+                    if (strpos($post_name_stripped, $w) !== false) {
                         $matched_posts[] = $post;
                         break;
                     }
