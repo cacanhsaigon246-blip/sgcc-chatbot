@@ -60,7 +60,7 @@ if (empty($api_key) || strpos($api_key, 'AQ.') === 0) {
     }
 }
 
-$model = $data['model'] ?? 'gemini-2.0-flash';
+$model = $data['model'] ?? 'gemini-3.5-flash-lite';
 
 // Bỏ apiKey khỏi payload gửi cho Gemini
 if (isset($data['apiKey'])) unset($data['apiKey']);
