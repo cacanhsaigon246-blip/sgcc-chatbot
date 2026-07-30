@@ -392,15 +392,21 @@
       <section class="admin-section" id="sec-members">
         <h2>👥 Quản Lý Thành Viên</h2>
         <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
-          Danh sách thành viên đã đăng nhập Google với chatbot của anh.
+          Danh sách thành viên đã đăng nhập và tương tác với chatbot của anh từ WordPress.
         </p>
-        <div class="form-card" style="text-align:center;padding:40px">
-          <div style="font-size:40px;margin-bottom:12px">📊</div>
-          <p style="color:var(--muted)">Tính năng xem thành viên cần backend server.<br/>
-          Em sẽ cài trong Phase 2 khi anh có backend PHP/Node ạ.</p>
-          <p style="font-size:12px;color:var(--muted);margin-top:8px">
-            Hiện tại anh xem được log qua Google Analytics hoặc Zalo OA.
-          </p>
+        <div class="form-card">
+          <div style="overflow-x:auto">
+            <table id="members-table">
+              <thead><tr>
+                <th>Tên Thành Viên</th>
+                <th>Lần Đầu Xuất Hiện</th>
+                <th>Hoạt Động Cuối Cùng</th>
+              </tr></thead>
+              <tbody id="members-tbody">
+                <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Đang tải thành viên...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -527,6 +533,7 @@
     updateEmbedCode();
     renderKnowledgeTags();
     loadChatLogsTable();
+    loadMembersTable();
   }
 
   // ── CHAT LOGS ──
@@ -580,7 +587,18 @@
   async function updateStats() {
     const products = JSON.parse(localStorage.getItem('sgcc_products') || '[]');
     document.getElementById('stat-products').textContent = products.length;
-    document.getElementById('stat-members').textContent = '—';
+    
+    try {
+      const res = await fetch('get_members.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.members) {
+        document.getElementById('stat-members').textContent = data.members.length;
+      } else {
+        document.getElementById('stat-members').textContent = '0';
+      }
+    } catch(e) {
+      document.getElementById('stat-members').textContent = '—';
+    }
 
     // Kiểm tra server health qua proxy.php
     try {
@@ -592,6 +610,31 @@
       }
     } catch (e) {
       document.getElementById('stat-key').textContent = '✅ Server PHP OK';
+    }
+  }
+
+  async function loadMembersTable() {
+    const tbody = document.getElementById('members-tbody');
+    try {
+      const res = await fetch('get_members.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.members) {
+        if (!data.members.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Chưa có thành viên nào hoạt động.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.members.map(m => `
+          <tr>
+            <td><strong>${escapeHtml(m.name || '—')}</strong></td>
+            <td style="color:var(--muted);font-size:12px">${m.first_seen || '—'}</td>
+            <td style="color:var(--accent);font-size:12px">${m.last_active || '—'}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải dữ liệu.</td></tr>';
+      }
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối API thành viên.</td></tr>';
     }
   }
 

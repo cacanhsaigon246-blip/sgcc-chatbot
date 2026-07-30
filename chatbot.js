@@ -30,11 +30,39 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
   localStorage.removeItem('sgcc_guest_count'); // Dọn dẹp rác giới hạn cũ
   createOceanAnimations();
+  
+  // Phát hiện người dùng từ WordPress
+  const urlParams = new URLSearchParams(window.location.search);
+  const wpUser = urlParams.get('wp_user');
+  if (wpUser) {
+    state.user = {
+      name: wpUser,
+      picture: ''
+    };
+    localStorage.setItem('sgcc_user', JSON.stringify(state.user));
+    registerMemberOnServer(wpUser);
+  } else {
+    state.user = null;
+    localStorage.removeItem('sgcc_user');
+  }
+
   initGoogleSignIn();
   loadProductsFromStorage();
   showApp();
   checkServerHealth();
 });
+
+async function registerMemberOnServer(name) {
+  try {
+    await fetch('register_member.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name })
+    });
+  } catch (e) {
+    console.error('[SGCC] Loi dang ky thanh vien:', e);
+  }
+}
 
 function showApp() {
   const setupEl = document.getElementById('setup-overlay');

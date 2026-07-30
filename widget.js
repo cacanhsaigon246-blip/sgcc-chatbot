@@ -152,8 +152,28 @@
     badge.style.display = 'none';
     document.getElementById('sgcc-tooltip') && document.getElementById('sgcc-tooltip').remove();
 
-    // Lazy load iframe (chống cache cứng bằng timestamp)
-    if (!iframe.src) iframe.src = CHAT_URL + '?nocache=' + new Date().getTime();
+    // Lazy load iframe (chống cache cứng bằng timestamp + truyền user từ WordPress)
+    if (!iframe.src) {
+      var userParam = '';
+      try {
+        var adminBarName = document.querySelector('#wp-admin-bar-my-account .display-name');
+        var flatsomeName = document.querySelector('.account-item strong') || document.querySelector('.account-item span');
+        var detectedName = '';
+        if (adminBarName) {
+          detectedName = adminBarName.textContent.trim();
+        } else if (flatsomeName) {
+          detectedName = flatsomeName.textContent.trim();
+          // Xóa các chữ thừa như "Chào, " nếu Flatsome tự sinh ra
+          detectedName = detectedName.replace(/^Chào,\s*/i, '');
+        }
+        if (detectedName && detectedName !== 'Đăng nhập') {
+          userParam = '&wp_user=' + encodeURIComponent(detectedName);
+        }
+      } catch (e) {
+        console.warn('[SGCC] Khong the doc thong tin user WordPress:', e);
+      }
+      iframe.src = CHAT_URL + '?nocache=' + new Date().getTime() + userParam;
+    }
 
     wrap.classList.add('open');
     btn.classList.add('open');
