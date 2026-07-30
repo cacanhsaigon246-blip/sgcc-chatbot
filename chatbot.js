@@ -34,16 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Phát hiện người dùng từ WordPress
   const urlParams = new URLSearchParams(window.location.search);
   const wpUser = urlParams.get('wp_user');
+  const wpEmail = urlParams.get('wp_email');
   if (wpUser) {
     state.user = {
       name: wpUser,
+      email: wpEmail || '',
       picture: ''
     };
     localStorage.setItem('sgcc_user', JSON.stringify(state.user));
     registerMemberOnServer(wpUser);
   } else {
-    state.user = null;
-    localStorage.removeItem('sgcc_user');
+    // Chỉ đăng xuất/xóa session đồng bộ WordPress nếu WordPress báo đã đăng xuất (wp_user bị unset trên trang có class logged-in bị mất)
+    // Nếu là phiên đăng nhập trực tiếp Google Auth (có credential) thì giữ nguyên.
+    const isWpSyncedUser = state.user && !state.user.credential;
+    if (isWpSyncedUser) {
+      state.user = null;
+      localStorage.removeItem('sgcc_user');
+    }
   }
 
   initGoogleSignIn();

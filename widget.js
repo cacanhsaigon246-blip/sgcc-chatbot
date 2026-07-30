@@ -156,18 +156,88 @@
     if (!iframe.src) {
       var userParam = '';
       try {
-        var adminBarName = document.querySelector('#wp-admin-bar-my-account .display-name');
-        var flatsomeName = document.querySelector('.account-item strong') || document.querySelector('.account-item span');
         var detectedName = '';
-        if (adminBarName) {
-          detectedName = adminBarName.textContent.trim();
-        } else if (flatsomeName) {
-          detectedName = flatsomeName.textContent.trim();
-          // Xóa các chữ thừa như "Chào, " nếu Flatsome tự sinh ra
-          detectedName = detectedName.replace(/^Chào,\s*/i, '');
+        var detectedEmail = '';
+
+        // 1. Quét tên từ admin bar
+        var adminBarName = document.querySelector('#wp-admin-bar-my-account .display-name');
+        if (adminBarName) detectedName = adminBarName.textContent.trim();
+
+        // 2. Quét tên từ Flatsome Account item
+        if (!detectedName) {
+          var selectors = [
+            '.account-item strong',
+            '.account-item span',
+            '.account-link strong',
+            '.account-link span',
+            '.nav-top-link strong'
+          ];
+          for (var i = 0; i < selectors.length; i++) {
+            var el = document.querySelector(selectors[i]);
+            if (el) {
+              var text = el.textContent.trim().replace(/^Chào,\s*/i, '');
+              if (text && text !== 'Đăng nhập' && text.toLowerCase() !== 'my account') {
+                detectedName = text;
+                break;
+              }
+            }
+          }
         }
-        if (detectedName && detectedName !== 'Đăng nhập') {
-          userParam = '&wp_user=' + encodeURIComponent(detectedName);
+
+        // 3. Quét từ các thẻ a My Account hoặc Tài khoản
+        if (!detectedName) {
+          var accLinks = document.querySelectorAll('a[href*="/my-account/"], a[href*="/tai-khoan/"]');
+          for (var j = 0; j < accLinks.length; j++) {
+            var txt = accLinks[j].textContent.trim().replace(/^Chào,\s*/i, '');
+            if (txt && txt !== 'Đăng nhập' && txt.toLowerCase() !== 'my account' && txt.length < 30) {
+              detectedName = txt;
+              break;
+            }
+          }
+        }
+
+        // 4. Nếu đang ở trang sửa thông tin tài khoản WooCommerce, quét trực tiếp từ ô nhập liệu
+        var emailInput = document.getElementById('account_email') || document.querySelector('input[name="account_email"]');
+        if (emailInput && emailInput.value) detectedEmail = emailInput.value.trim();
+
+        var nameInput = document.getElementById('account_display_name') || document.querySelector('input[name="account_display_name"]');
+        if (nameInput && nameInput.value) detectedName = nameInput.value.trim();
+
+        // 5. Đồng bộ và lưu trữ vào localStorage để dùng cho các trang khác không hiển thị tên
+        if (detectedName) {
+          localStorage.setItem('sgcc_wp_user_name', detectedName);
+        }
+        if (detectedEmail) {
+          localStorage.setItem('sgcc_wp_user_email', detectedEmail);
+        }
+
+        // Đọc lại từ cache localStorage
+        if (!detectedName) {
+          detectedName = localStorage.getItem('sgcc_wp_user_name') || '';
+        }
+        if (!detectedEmail) {
+          detectedEmail = localStorage.getItem('sgcc_wp_user_email') || '';
+        }
+
+        // 6. Dự phòng: Nếu body có class "logged-in" mà vẫn trống tên, gán mặc định là Thành viên
+        if (!detectedName && document.body.classList.contains('logged-in')) {
+          detectedName = 'Thành viên';
+        }
+
+        // 7. Nếu đã đăng xuất (không còn class logged-in), xóa sạch cache
+        if (!document.body.classList.contains('logged-in')) {
+          detectedName = '';
+          detectedEmail = '';
+          localStorage.removeItem('sgcc_wp_user_name');
+          localStorage.removeItem('sgcc_wp_user_email');
+        }
+
+        // Ghép tham số
+        if (detectedName) {
+          userParam += '&wp_user=' + encodeURIComponent(detectedName);
+        }
+        if (detectedEmail) {
+          userParam += '&wp_email=' + encodeURIComponent(detectedEmail);
         }
       } catch (e) {
         console.warn('[SGCC] Khong the doc thong tin user WordPress:', e);
