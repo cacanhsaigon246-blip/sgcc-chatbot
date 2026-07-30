@@ -370,9 +370,9 @@
           <label>API Key hiện tại</label>
           <input type="password" id="admin-api-key" placeholder="AIzaSy..." />
           <button class="btn-primary" onclick="saveAdminApiKey()">💾 Lưu API Key</button>
-          <p style="font-size:11px;color:var(--muted);margin-top:10px">
-            🔒 Key được lưu trong localStorage của trình duyệt này. Key này cũng được dùng cho giao diện chat.
-          </p>
+          <div style="font-size:13px;margin-top:14px;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px" id="api-key-status">
+            Đang kiểm tra trạng thái Máy chủ...
+          </div>
         </div>
 
         <div class="form-card">
@@ -681,9 +681,22 @@
   }
 
   // ── API KEY ──
-  function loadApiKeyFields() {
-    document.getElementById('admin-api-key').value = localStorage.getItem('sgcc_api_key') || '';
+  async function loadApiKeyFields() {
     document.getElementById('google-client-id').value = localStorage.getItem('sgcc_google_client_id') || '';
+    try {
+      const res = await fetch('check_key.php');
+      const json = await res.json();
+      const statusEl = document.getElementById('api-key-status');
+      const inputEl = document.getElementById('admin-api-key');
+      if (json.hasKey) {
+        statusEl.innerHTML = '✅ <strong>Đã kết nối Server:</strong> Máy chủ đã lưu API Key ẩn. Khách hàng đang chat bình thường (nhấn F5 thoải mái).';
+        statusEl.style.color = 'var(--success)';
+        inputEl.placeholder = 'Đã lưu trên Server. Chỉ nhập khi cần đổi key mới...';
+      } else {
+        statusEl.innerHTML = '⚠️ <strong>Chưa có API Key:</strong> Vui lòng nhập Key bên dưới và nhấn Lưu.';
+        statusEl.style.color = '#ff9800';
+      }
+    } catch(e) {}
   }
   async function saveAdminApiKey() {
     const key = document.getElementById('admin-api-key').value.trim();
