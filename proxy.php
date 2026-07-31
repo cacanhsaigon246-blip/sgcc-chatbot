@@ -191,25 +191,16 @@ if (!empty($question)) {
             }
         }
 
-        // 2. Khớp sản phẩm giới thiệu web
-        $woo_file = __DIR__ . '/woocommerce_products.json';
-        if (file_exists($woo_file)) {
-            $woo_products = json_decode(file_get_contents($woo_file), true) ?: [];
-            $matched_woo = [];
-            foreach ($woo_products as $p) {
-                $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
-                foreach ($q_words as $w) {
-                    if (strpos($p_name_stripped, $w) !== false) {
-                        $matched_woo[] = $p;
-                        break;
-                    }
-                }
-            }
-            $matched_woo = array_slice($matched_woo, 0, 4);
-            if (!empty($matched_woo)) {
-                $matching_context .= "\n[SẢN PHẨM KHÁC TRÊN WEBSITE SAIGONCACANH.COM]:\n";
-                foreach ($matched_woo as $p) {
-                    $matching_context .= "- " . $p['name'] . " | Link xem: " . ($p['link'] ?? 'https://saigoncacanh.com') . "\n";
+        // 2. Khớp sản phẩm gian hàng online shop.saigoncacanh.com
+        $ctx_shop = stream_context_create(['http' => ['timeout' => 2.5]]);
+        $shop_api_url = "https://shop.saigoncacanh.com/chatbot-api.php?q=" . urlencode($question);
+        $shop_res = @file_get_contents($shop_api_url, false, $ctx_shop);
+        if ($shop_res) {
+            $shop_data = json_decode($shop_res, true);
+            if (!empty($shop_data['products'])) {
+                $matching_context .= "\n[SẢN PHẢM CÓ SẴN TRÊN GIAN HÀNG ONLINE (https://shop.saigoncacanh.com)]:\n";
+                foreach (array_slice($shop_data['products'], 0, 5) as $sp) {
+                    $matching_context .= "- " . $sp['title'] . " | Giá: " . ($sp['price'] ?? 'Deal Ngon') . " | Link mua ngay: " . ($sp['affiliate_link'] ?? 'https://shop.saigoncacanh.com') . "\n";
                 }
             }
         }
@@ -248,10 +239,11 @@ $system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh '
 - Tuyệt đối KHÔNG trả lời rập khuôn văn mẫu như: 'Dạ về câu hỏi của anh...', 'Em xin tư vấn giải pháp nhanh cho anh ạ...'. Trả lời thẳng vào vấn đề, tự nhiên như hai người chơi cá đang trò chuyện với nhau.
 - KHÔNG đưa các nút bấm hay kêu gọi nhắn tin Zalo.
 
-[BÁM SÁT KHO DỮ LIỆU POS THỰC TẾ & GIAN HÀNG SHOP]:
+[BÁM SÁT KHO DỮ LIỆU POS THỰC TẾ & GIAN HÀNG SHOP.SAIGONCACANH.COM]:
 - Khi khách hỏi giá hoặc tư vấn mua hàng, bạn chỉ cần báo **TÊN SẢN PHẨM** và **GIÁ TIỀN** (không nói chi tiết tồn kho hay mã số rườm rà).
-- NẾU SẢN PHẨM KHÁCH HỎI Thuộc danh sách [TẠM HẾT HÀNG] hoặc KHÔNG CÓ TRONG POS: Bạn phải nói khéo léo cho khách biết là dòng này/sản phẩm này hiện tiệm đang tạm hết hàng, đồng thời nhiệt tình tư vấn sang một sản phẩm tương tự còn hàng trong danh sách POS để khách tham khảo.
-- Đính kèm link xem và mua sản phẩm trực tiếp từ gian hàng chính thức: https://shop.saigoncacanh.com bằng định dạng [Tên sản phẩm](https://shop.saigoncacanh.com) cho khách bấm vào mua.
+- DẮT DẪN KHÉO LÉO: Khéo léo tìm hiểu nguyên nhân (ví dụ: nước bị đục, cá bị nấm, lọc yếu...) rồi gợi ý đúng món phụ kiện/thuốc giải quyết tận gốc vấn đề của khách.
+- ĐÍNH KÈM LINK MUA CHÍNH XÁC: Khi giới thiệu sản phẩm từ danh sách [SẢN PHẨM CÓ SẴN TRÊN GIAN HÀNG ONLINE (https://shop.saigoncacanh.com)], bạn PHẢI đính kèm đường link mua hàng chính xác tương ứng (`affiliate_link`) bằng định dạng Markdown: [Tên sản phẩm](Link mua ngay). Khách bấm vào sẽ chuyển thẳng tới trang đặt mua sản phẩm đó.
+- NẾU SẢN PHẨM KHÁCH HỎI Thuộc danh sách [TẠM HẾT HÀNG]: Bạn nói khéo léo là tiệm đang tạm hết món này, và nhiệt tình gợi ý sản phẩm tương tự còn hàng trong danh sách.
 
 [NGỮ CẢNH HỆ THỐNG]:
 " . $location_instruction . "
