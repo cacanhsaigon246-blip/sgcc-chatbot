@@ -105,11 +105,13 @@ DỮ LIỆU HỆ THỐNG HIỆN TẠI:
 {$unanswered_summary}
 {$pos_details}";
 
-// Lấy API Key từ Server local
-$api_key = '';
-$key_file = __DIR__ . '/gemini_key.txt';
-if (file_exists($key_file)) {
-    $api_key = trim(file_get_contents($key_file));
+// Lấy API Key từ Header, Body hoặc Server local
+$api_key = $_SERVER['HTTP_X_GEMINI_KEY'] ?? ($data['apiKey'] ?? '');
+if (empty($api_key)) {
+    $key_file = __DIR__ . '/gemini_key.txt';
+    if (file_exists($key_file)) {
+        $api_key = trim(file_get_contents($key_file));
+    }
 }
 
 if (empty($api_key)) {
@@ -125,7 +127,7 @@ $payload = [
     ]
 ];
 
-$model = 'gemini-2.0-flash';
+$model = 'gemini-2.5-flash';
 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
 
 $ch = curl_init($gemini_url);
