@@ -48,12 +48,17 @@
 
 ### 🟢 Đã hoàn thành:
 - [x] Sửa lỗi câu phản hồi AI không đẩy vào khung chat UI (`commit be4d8bf`).
-- [x] Thêm tự động bới đệm (cache-busting) `Date.now()` cho `widget.js` trong mã nhúng Admin.
 - [x] Tích hợp tính năng nhận diện thành viên WordPress và tự động xóa giới hạn tin nhắn khách vãng lai.
-- [x] Xử lý lọc bỏ dấu tiếng Việt (Vietnamese Accent Stripping) khi tìm sản phẩm & gợi ý link chính xác.
+- [x] Xử lý lọc bỏ dấu tiếng Việt (Vietnamese Accent Stripping) khi tìm sản phẩm.
 - [x] 1-Click đồng bộ sản phẩm từ MySQL Hostinger POS Database.
+- [x] Nâng cấp trang Admin cấu hình linh hoạt Google Client ID.
+- [x] Ra mắt tính năng **🤖 Trợ Lý CEO AI** dành riêng cho Anh Phát tra cứu kho POS, SĐT khách mới và sản phẩm trên Admin Dashboard (`admin_proxy.php`).
+- [x] Kết nối trực tiếp API **`https://shop.saigoncacanh.com/chatbot-api.php`** lấy tiêu đề và link affiliate thật 100% cho từng sản phẩm.
+- [x] Gỡ bỏ hoàn toàn nút bấm và các đoạn code Zalo tự phát sinh làm phiền Anh Phát.
+- [x] Tối ưu sửa lỗi bọc Markdown link ẩn các đường link affiliate dài ngoẵng vào tên sản phẩm.
+- [x] Cập nhật chuẩn địa chỉ tiệm: **246 Hồ Văn Huê, Phường Đức Nhuận, Phú Nhuận, TP.HCM**.
+- [x] Nâng cấp model AI chuẩn thế hệ mới: **`gemini-3.5-flash-lite`**.
 
-### 🟡 Đang thực hiện:
+### 🟡 Định hướng tiếp theo:
 - [/] Khởi tạo kho sao lưu GitHub `saigoncacanh-woocommerce` bảo vệ website chính.
-- [/] Nâng cấp trang Admin để cấu hình linh hoạt `Google Client ID` tự động nạp sang `chatbot.js`.
-- [/] Thiết lập Sổ tay dự án ghi nhớ (`PROJECT_MEMO.md`).
+- [/] Theo dõi các câu hỏi chưa trả lời trên Admin để tối ưu dần kho kiến thức.
