@@ -889,9 +889,16 @@
     return products;
   }
 
-  // ── API KEY ──
+  // ── API KEY & GOOGLE CONFIG ──
   async function loadApiKeyFields() {
-    document.getElementById('google-client-id').value = localStorage.getItem('sgcc_google_client_id') || '';
+    try {
+      const gRes = await fetch('get_google_config.php');
+      const gData = await gRes.json();
+      if (gData.success && gData.client_id) {
+        document.getElementById('google-client-id').value = gData.client_id;
+      }
+    } catch(e) {}
+
     try {
       const res = await fetch('check_key.php');
       const json = await res.json();
@@ -929,9 +936,24 @@
       }
     }
   }
-  function saveGoogleClientId() {
+  async function saveGoogleClientId() {
     const id = document.getElementById('google-client-id').value.trim();
-    if (id) { localStorage.setItem('sgcc_google_client_id', id); showToast('✅ Đã lưu Google Client ID ạ!'); }
+    try {
+      const res = await fetch('save_google_config.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ client_id: id })
+      });
+      const json = await res.json();
+      if (json.success) {
+        localStorage.setItem('sgcc_google_client_id', id);
+        showToast('✅ Đã lưu Google Client ID lên Server ạ!');
+      } else {
+        showToast('❌ Lỗi: ' + json.message);
+      }
+    } catch (e) {
+      showToast('❌ Không lưu được Google Client ID lên Server!');
+    }
   }
 
   // ── Q&A RULES ──

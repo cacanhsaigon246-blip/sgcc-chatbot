@@ -97,22 +97,50 @@ async function checkServerHealth() {
 }
 
 // ─── GOOGLE AUTH ──────────────────────────────────────────────
-function initGoogleSignIn() {
+async function initGoogleSignIn() {
   if (typeof google === 'undefined') return;
-  google.accounts.id.initialize({
-    client_id: CONFIG.GOOGLE_CLIENT_ID,
-    callback: handleGoogleCredential,
-    auto_select: false,
-  });
+  try {
+    const res = await fetch(`${CONFIG.API_BASE_URL}/get_google_config.php`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.client_id) {
+        CONFIG.GOOGLE_CLIENT_ID = data.client_id;
+      }
+    }
+  } catch (e) {
+    console.warn('[SGCC] Không nạp được Google Client ID từ server, dùng cấu hình mặc định.');
+  }
+
+  if (!CONFIG.GOOGLE_CLIENT_ID || CONFIG.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+    console.log('[SGCC] Chưa cấu hình Google Client ID hợp lệ.');
+    return;
+  }
+
+  try {
+    google.accounts.id.initialize({
+      client_id: CONFIG.GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential,
+      auto_select: false,
+    });
+  } catch (err) {
+    console.warn('[SGCC] Lỗi khởi tạo Google Sign-in:', err);
+  }
 }
 
 function renderGoogleButton() {
   if (typeof google === 'undefined') return;
   const container = document.getElementById('google-signin-btn');
   if (!container) return;
+  
+  if (!CONFIG.GOOGLE_CLIENT_ID || CONFIG.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+    container.innerHTML = '<p style="font-size:12px; color:#888; text-align:center;">Vui lòng đăng nhập qua WordPress hoặc Zalo</p>';
+    return;
+  }
+
   container.innerHTML = '';
-  google.accounts.id.renderButton(container, {
-    theme: 'filled_blue',
+  try {
+    google.accounts.id.renderButton(container, {
+      theme: 'filled_blue',
     size: 'large',
     text: 'signin_with',
     locale: 'vi',
