@@ -159,20 +159,34 @@ if (!empty($question)) {
         if (file_exists($pos_file)) {
             $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
             $matched_pos = [];
+            $out_of_stock = [];
             foreach ($pos_products as $p) {
                 $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
                 foreach ($q_words as $w) {
                     if (strpos($p_name_stripped, $w) !== false) {
-                        $matched_pos[] = $p;
+                        $qty = intval($p['qty'] ?? 0);
+                        if ($qty > 0) {
+                            $matched_pos[] = $p;
+                        } else {
+                            $out_of_stock[] = $p;
+                        }
                         break;
                     }
                 }
             }
+            
             $matched_pos = array_slice($matched_pos, 0, 8);
             if (!empty($matched_pos)) {
-                $matching_context .= "\n[DANH SÁCH SẢN PHẨM THỰC TẾ ĐANG CÓ TẠI TIỆM (pos.saigoncacanh.com)]:\n";
+                $matching_context .= "\n[DANH SÁCH SẢN PHẢM CÒN HÀNG TẠI POS (Gửi giá tiền cho khách)]:\n";
                 foreach ($matched_pos as $p) {
-                    $matching_context .= "- " . $p['name'] . " | Giá tại tiệm: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ | Tồn: " . ($p['qty'] ?? 0) . " | Size: " . ($p['size'] ?? '—') . "\n";
+                    $matching_context .= "- " . $p['name'] . " | Giá tiền: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ (Còn " . ($p['qty'] ?? 0) . " sản phẩm)\n";
+                }
+            }
+
+            if (!empty($out_of_stock)) {
+                $matching_context .= "\n[DANH SÁCH SẢN PHẢM HẾT HÀNG TẠI POS (Hãy báo khách tạm hết hàng và tư vấn sản phẩm tương tự còn hàng bên trên)]:\n";
+                foreach (array_slice($out_of_stock, 0, 5) as $p) {
+                    $matching_context .= "- " . $p['name'] . " (TẠM HẾT HÀNG)\n";
                 }
             }
         }
@@ -235,9 +249,9 @@ $system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh '
 - KHÔNG đưa các nút bấm hay kêu gọi nhắn tin Zalo.
 
 [BÁM SÁT KHO DỮ LIỆU POS THỰC TẾ & GIAN HÀNG SHOP]:
-- Khi khách hỏi giá, tư vấn phụ kiện, thức ăn, thuốc trị bệnh cá, bạn PHẢI trích xuất và báo tên sản phẩm, giá bán chính xác từ danh sách POS bên dưới.
-- Đính kèm link xem và mua sản phẩm trực tiếp từ hệ thống gian hàng chính thức: https://shop.saigoncacanh.com (hoặc link xem sản phẩm cụ thể nếu có) để khách tiện xem sản phẩm. Dùng cú pháp: [Tên sản phẩm](https://shop.saigoncacanh.com).
-- Nếu có bài viết hướng dẫn trên saigoncacanh.com, đính kèm link đọc cho khách.
+- Khi khách hỏi giá hoặc tư vấn mua hàng, bạn chỉ cần báo **TÊN SẢN PHẨM** và **GIÁ TIỀN** (không nói chi tiết tồn kho hay mã số rườm rà).
+- NẾU SẢN PHẨM KHÁCH HỎI Thuộc danh sách [TẠM HẾT HÀNG] hoặc KHÔNG CÓ TRONG POS: Bạn phải nói khéo léo cho khách biết là dòng này/sản phẩm này hiện tiệm đang tạm hết hàng, đồng thời nhiệt tình tư vấn sang một sản phẩm tương tự còn hàng trong danh sách POS để khách tham khảo.
+- Đính kèm link xem và mua sản phẩm trực tiếp từ gian hàng chính thức: https://shop.saigoncacanh.com bằng định dạng [Tên sản phẩm](https://shop.saigoncacanh.com) cho khách bấm vào mua.
 
 [NGỮ CẢNH HỆ THỐNG]:
 " . $location_instruction . "
