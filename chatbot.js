@@ -328,16 +328,7 @@ function saveChatLog(user, question, answer, isFallback = false) {
 
 // ─── SMART FALLBACK TỪ KHO KIẾN THỨC ────
 function searchSmartFallback(query) {
-  const lowerQ = query.toLowerCase();
-  if (typeof KNOWLEDGE_BASE !== 'undefined' && KNOWLEDGE_BASE.articles) {
-    const match = KNOWLEDGE_BASE.articles.find(a => 
-      lowerQ.split(' ').some(w => w.length > 2 && a.title.toLowerCase().includes(w))
-    );
-    if (match) {
-      return `Dạ anh ơi, về **${match.title}**, em tóm tắt nhanh giải pháp cho anh nè:\n\n${match.summary}\n\n📖 Anh có thể đọc thêm bài viết chi tiết tại đây nhé: [${match.title}](${match.url || 'https://saigoncacanh.com'})\n\n🛒 Cần đặt sản phẩm hoặc đồ nghề xử lý ngay thì anh ghé gian hàng bên em xem nhé: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)`;
-    }
-  }
-  return `Chào anh ạ! 🐟 Em là trợ lý Sài Gòn Cá Cảnh nè.\n\nVề câu hỏi "*${query}*", anh có thể xem các thông tin chia sẻ kinh nghiệm nuôi cá và cách xử lý tại: [Bài viết hướng dẫn nuôi cá - saigoncacanh.com](https://saigoncacanh.com)\n\nNếu cần tìm phụ kiện, thức ăn hay thuốc trị bệnh cá đúng chuẩn, anh ghé tham khảo trực tiếp trên gian hàng bên em tại: [Siêu Thị Sản Phẩm Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nhé ạ!`;
+  return `Dạ anh ơi! Hệ thống AI đang cập nhật thông tin dữ liệu mới nhất một chút ạ. 🐟\n\nAnh có thể ghé trực tiếp gian hàng online bên em để xem đầy đủ hình ảnh, giá cả và đặt mua nhanh nhất tại: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha anh!`;
 }
 
 function sendQuickReply(text) {
