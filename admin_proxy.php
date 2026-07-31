@@ -127,7 +127,7 @@ $payload = [
     ]
 ];
 
-$model = 'gemini-2.5-flash';
+$model = 'gemini-3.5-flash-lite';
 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
 
 $ch = curl_init($gemini_url);

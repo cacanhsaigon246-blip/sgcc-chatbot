@@ -52,7 +52,7 @@ $data = json_decode($body, true);
 
 // Nhận Key từ Header hoặc Body
 $api_key = $_SERVER['HTTP_X_GEMINI_KEY'] ?? ($data['apiKey'] ?? '');
-if (empty($api_key) || strpos($api_key, 'AQ.') === 0) {
+if (empty($api_key)) {
     // Nếu chưa có key hợp lệ, kiểm tra file local key
     $key_file = __DIR__ . '/gemini_key.txt';
     if (file_exists($key_file)) {
