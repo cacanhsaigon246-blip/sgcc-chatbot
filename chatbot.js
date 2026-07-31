@@ -479,6 +479,7 @@ function addBotMessage(text, animate = true) {
 
 function appendMessage(html) {
   const area = document.getElementById('messages-area');
+  if (!area) return;
   area.insertAdjacentHTML('beforeend', html);
   area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
 }
