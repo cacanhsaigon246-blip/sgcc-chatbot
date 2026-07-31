@@ -280,15 +280,7 @@ async function sendMessage() {
     removeImage();
     showTyping();
 
-    // Check Handoff Zalo
-    const lowerText = messageText.toLowerCase();
-    if (lowerText.includes('tư vấn viên') || lowerText.includes('anh phát') || lowerText.includes('chủ shop') || lowerText.includes('người thật') || lowerText.includes('gặp nhân viên') || lowerText.includes('trực tiếp')) {
-      hideTyping();
-      addBotMessage(`Dạ em chuyển kết nối đến **Sài Gòn Cá Cảnh** ngay ạ! 🐟\n\nAnh bấm nút bên dưới để nhắn Zalo hỗ trợ chốt đơn nhanh nhất nhé:\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Trực Tiếp Qua Zalo Shop</a></div>`);
-      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, 'Chuyển tiếp Zalo Shop', false);
-      return;
-    }
-
+    // Send to Backend Proxy
     try {
       const reply = await callBackendSSE(messageText);
       hideTyping();
@@ -461,7 +453,7 @@ function handleError(err) {
   if (msg.includes('Failed to fetch') || msg.includes('network')) return '🌐 Mất kết nối mạng rồi anh ơi! Anh kiểm tra wifi/4G rồi thử lại nhé ạ.';
   if (msg.includes('500')) return '🔧 Server đang bảo trì anh ạ. Anh thử lại sau vài phút nhé!';
   console.error('Backend error:', err);
-  return `❌ Có lỗi xảy ra rồi anh ơi!\n\nAnh liên hệ trực tiếp **Zalo Shop** để em hỗ trợ nhé ạ!`;
+  return `❌ Hệ thống bận một chút ạ! Anh ghé gian hàng online [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) xem sản phẩm nhé ạ!`;
 }
 
 // ─── UI — MESSAGES ────────────────────────────────────────────
