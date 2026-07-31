@@ -289,14 +289,14 @@ async function sendMessage() {
       saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, reply, false);
     } catch (err) {
       hideTyping();
-      const smartReply = searchSmartFallback(messageText);
-      addBotMessage(smartReply);
-      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, smartReply, true);
+      const errorMsg = handleError(err);
+      addBotMessage(errorMsg);
+      saveChatLog(state.user ? state.user.name : 'Khách vãng lai', messageText, errorMsg, true);
     }
   } catch (e) {
     console.error('Send message error:', e);
     hideTyping();
-    addBotMessage(searchSmartFallback(text));
+    addBotMessage(handleError(e));
   } finally {
     state.isTyping = false;
     if (sendBtn) sendBtn.disabled = false;
