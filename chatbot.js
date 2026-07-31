@@ -189,12 +189,7 @@ function updateUserBar() {
 
 // ─── MESSAGE LIMIT (Đã mở khóa hoàn toàn 100%) ────────────────
 function checkMessageLimit() {
-  if (!state.user) {
-    if (state.guestMsgCount >= CONFIG.GUEST_MESSAGE_LIMIT) {
-      return false; // Đã đạt giới hạn
-    }
-  }
-  return true; // Cho phép chat
+  return true; // Luôn luôn cho phép chat không giới hạn
 }
 
 function incrementGuestCount() {
