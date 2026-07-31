@@ -154,56 +154,43 @@ if (!empty($question)) {
     $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 1; });
 
     if (!empty($q_words)) {
-        // 1. Khớp kho POS thực tế
-        $pos_file = __DIR__ . '/pos_products.json';
-        if (file_exists($pos_file)) {
-            $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
-            $matched_pos = [];
-            $out_of_stock = [];
-            foreach ($pos_products as $p) {
-                $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
-                foreach ($q_words as $w) {
-                    if (strpos($p_name_stripped, $w) !== false) {
-                        $qty = intval($p['qty'] ?? 0);
-                        if ($qty > 0) {
-                            $matched_pos[] = $p;
-                        } else {
-                            $out_of_stock[] = $p;
-                        }
-                        break;
-                    }
-                }
-            }
-            
-            $matched_pos = array_slice($matched_pos, 0, 8);
-            if (!empty($matched_pos)) {
-                $matching_context .= "\n[DANH SÁCH SẢN PHẨM CÒN HÀNG TẠI POS (MỖI SẢN PHẨM BẮT BUỘC ĐÍNH KÈM LINK MUA CHÍNH XÁC)]:\n";
-                foreach ($matched_pos as $p) {
-                    $p_name = $p['name'];
-                    $p_price = number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ";
-                    $p_link = "https://shop.saigoncacanh.com/index.php?s=" . urlencode($p_name);
-                    $matching_context .= "- [" . $p_name . "](" . $p_link . ") | Giá: " . $p_price . "\n";
-                }
-            }
-
-            if (!empty($out_of_stock)) {
-                $matching_context .= "\n[DANH SÁCH SẢN PHẨM HẾT HÀNG TẠI POS (Tư vấn dòng khác)]:\n";
-                foreach (array_slice($out_of_stock, 0, 5) as $p) {
-                    $matching_context .= "- " . $p['name'] . " (TẠM HẾT HÀNG)\n";
-                }
-            }
-        }
-
-        // 2. Khớp sản phẩm gian hàng online shop.saigoncacanh.com
-        $ctx_shop = stream_context_create(['http' => ['timeout' => 2.5]]);
+        // 1. LẤY SẢN PHẨM THẬT & LINK THẬT TỪ GIAN HÀNG SHOP.SAIGONCACANH.COM
+        $ctx_shop = stream_context_create(['http' => ['timeout' => 3.0]]);
         $shop_api_url = "https://shop.saigoncacanh.com/chatbot-api.php?q=" . urlencode($question);
         $shop_res = @file_get_contents($shop_api_url, false, $ctx_shop);
         if ($shop_res) {
             $shop_data = json_decode($shop_res, true);
             if (!empty($shop_data['products'])) {
-                $matching_context .= "\n[SẢN PHẢM CÓ SẴN TRÊN GIAN HÀNG ONLINE (https://shop.saigoncacanh.com)]:\n";
-                foreach (array_slice($shop_data['products'], 0, 5) as $sp) {
-                    $matching_context .= "- " . $sp['title'] . " | Giá: " . ($sp['price'] ?? 'Deal Ngon') . " | Link mua ngay: " . ($sp['affiliate_link'] ?? 'https://shop.saigoncacanh.com') . "\n";
+                $matching_context .= "\n[DANH SÁCH SẢN PHẨM CHÍNH XÁC TỪ GIAN HÀNG SHOP.SAIGONCACANH.COM (BẮT BUỘC DÙNG TÊN VÀ LINK NÀY DẪN ĐƯỜNG MUA HÀNG KHÁCH)]:\n";
+                foreach (array_slice($shop_data['products'], 0, 6) as $sp) {
+                    $sp_title = $sp['title'];
+                    $sp_price = $sp['price'] ?? 'Deal Ngon';
+                    $sp_link = $sp['affiliate_link'] ?? 'https://shop.saigoncacanh.com';
+                    $matching_context .= "- [" . $sp_title . "](" . $sp_link . ") | Giá: " . $sp_price . "\n";
+                }
+            }
+        }
+
+        // 2. Tham khảo thêm giá POS thực tế tại tiệm (nếu có)
+        $pos_file = __DIR__ . '/pos_products.json';
+        if (file_exists($pos_file)) {
+            $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
+            $matched_pos = [];
+            foreach ($pos_products as $p) {
+                $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
+                foreach ($q_words as $w) {
+                    if (strpos($p_name_stripped, $w) !== false) {
+                        if (intval($p['qty'] ?? 0) > 0) {
+                            $matched_pos[] = $p;
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!empty($matched_pos)) {
+                $matching_context .= "\n[GIÁ THAM KHẢO TRỰC TIẾP TẠI TIỆM 246 HỒ VĂN HUÊ (POS)]:\n";
+                foreach (array_slice($matched_pos, 0, 5) as $p) {
+                    $matching_context .= "- " . $p['name'] . " | Giá tại cửa hàng: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ\n";
                 }
             }
         }
@@ -242,10 +229,10 @@ $system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh '
 - Tuyệt đối KHÔNG trả lời rập khuôn văn mẫu như: 'Dạ về câu hỏi của anh...', 'Em xin tư vấn giải pháp nhanh cho anh ạ...'. Trả lời thẳng vào vấn đề, tự nhiên như hai người chơi cá đang trò chuyện với nhau.
 - KHÔNG đưa các nút bấm hay kêu gọi nhắn tin Zalo.
 
-[BÁM SÁT KHO DỮ LIỆU POS THỰC TẾ & GIAN HÀNG SHOP.SAIGONCACANH.COM]:
-- BẮT BUỘC ĐÍNH KÈM LINK SẢN PHẨM CHÍNH XÁC: Khi liệt kê hoặc tư vấn bất kỳ sản phẩm nào cho khách, bạn PHẢI đính kèm đường link mua chính xác đã được cung cấp trong danh sách bằng cú pháp Markdown: [Tên sản phẩm](Đường link chính xác). TUYỆT ĐỐI KHÔNG liệt kê tên sản phẩm trơn không có đường link!
-- DẮT DẪN KHÉO LÉO: Tìm hiểu nguyên nhân (ví dụ: kích thước hồ cá, nước bị đục, cá bị nấm...) rồi gợi ý đúng món phụ kiện/thuốc giải quyết tận gốc vấn đề của khách.
-- NẾU SẢN PHẨM KHÁCH HỎI Thuộc danh sách [TẠM HẾT HÀNG]: Nói khéo léo là tiệm đang tạm hết món này, và nhiệt tình gợi ý sản phẩm tương tự còn hàng trong danh sách.
+[BÁM SÁT GIAN HÀNG ONLINE SHOP.SAIGONCACANH.COM & QUY TẮC LINK CHÍNH XÁC 100%]:
+- BẮT BUỘC DÙNG LINK THẬT TỪ GIAN HÀNG: Khi giới thiệu sản phẩm cho khách, bạn PHẢI sử dụng đúng TÊNsản phẩm và ĐƯỜNG LINK THẬT (`affiliate_link`) được cung cấp trong mục [DANH SÁCH SẢN PHẨM CHÍNH XÁC TỪ GIAN HÀNG SHOP.SAIGONCACANH.COM]. Cú pháp Markdown: [Tên sản phẩm](affiliate_link chính xác).
+- TUYỆT ĐỐI KHÔNG TỰ TẠO LINK ẢO (như index.php?s=... hay saigoncacanh.com). Chỉ dùng duy nhất link thật từ gian hàng shop.saigoncacanh.com đã được cung cấp!
+- DẮT DẪN KHÉO LÉO: Tìm hiểu nhu cầu thực tế của khách (ví dụ: hồ dài bao nhiêu mét, bể cá đục hay cá bị nấm...) rồi chọn sản phẩm chuẩn nhất kèm link mua chính xác để khách bấm vào chốt đơn ngay.
 
 [NGỮ CẢNH HỆ THỐNG]:
 " . $location_instruction . "
