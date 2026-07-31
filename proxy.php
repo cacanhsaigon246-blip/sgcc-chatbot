@@ -177,14 +177,17 @@ if (!empty($question)) {
             
             $matched_pos = array_slice($matched_pos, 0, 8);
             if (!empty($matched_pos)) {
-                $matching_context .= "\n[DANH SÁCH SẢN PHẢM CÒN HÀNG TẠI POS (Gửi giá tiền cho khách)]:\n";
+                $matching_context .= "\n[DANH SÁCH SẢN PHẨM CÒN HÀNG TẠI POS (MỖI SẢN PHẨM BẮT BUỘC ĐÍNH KÈM LINK MUA CHÍNH XÁC)]:\n";
                 foreach ($matched_pos as $p) {
-                    $matching_context .= "- " . $p['name'] . " | Giá tiền: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ (Còn " . ($p['qty'] ?? 0) . " sản phẩm)\n";
+                    $p_name = $p['name'];
+                    $p_price = number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ";
+                    $p_link = "https://shop.saigoncacanh.com/index.php?s=" . urlencode($p_name);
+                    $matching_context .= "- [" . $p_name . "](" . $p_link . ") | Giá: " . $p_price . "\n";
                 }
             }
 
             if (!empty($out_of_stock)) {
-                $matching_context .= "\n[DANH SÁCH SẢN PHẢM HẾT HÀNG TẠI POS (Hãy báo khách tạm hết hàng và tư vấn sản phẩm tương tự còn hàng bên trên)]:\n";
+                $matching_context .= "\n[DANH SÁCH SẢN PHẨM HẾT HÀNG TẠI POS (Tư vấn dòng khác)]:\n";
                 foreach (array_slice($out_of_stock, 0, 5) as $p) {
                     $matching_context .= "- " . $p['name'] . " (TẠM HẾT HÀNG)\n";
                 }
@@ -240,10 +243,9 @@ $system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh '
 - KHÔNG đưa các nút bấm hay kêu gọi nhắn tin Zalo.
 
 [BÁM SÁT KHO DỮ LIỆU POS THỰC TẾ & GIAN HÀNG SHOP.SAIGONCACANH.COM]:
-- Khi khách hỏi giá hoặc tư vấn mua hàng, bạn chỉ cần báo **TÊN SẢN PHẨM** và **GIÁ TIỀN** (không nói chi tiết tồn kho hay mã số rườm rà).
-- DẮT DẪN KHÉO LÉO: Khéo léo tìm hiểu nguyên nhân (ví dụ: nước bị đục, cá bị nấm, lọc yếu...) rồi gợi ý đúng món phụ kiện/thuốc giải quyết tận gốc vấn đề của khách.
-- ĐÍNH KÈM LINK MUA CHÍNH XÁC: Khi giới thiệu sản phẩm từ danh sách [SẢN PHẨM CÓ SẴN TRÊN GIAN HÀNG ONLINE (https://shop.saigoncacanh.com)], bạn PHẢI đính kèm đường link mua hàng chính xác tương ứng (`affiliate_link`) bằng định dạng Markdown: [Tên sản phẩm](Link mua ngay). Khách bấm vào sẽ chuyển thẳng tới trang đặt mua sản phẩm đó.
-- NẾU SẢN PHẨM KHÁCH HỎI Thuộc danh sách [TẠM HẾT HÀNG]: Bạn nói khéo léo là tiệm đang tạm hết món này, và nhiệt tình gợi ý sản phẩm tương tự còn hàng trong danh sách.
+- BẮT BUỘC ĐÍNH KÈM LINK SẢN PHẨM CHÍNH XÁC: Khi liệt kê hoặc tư vấn bất kỳ sản phẩm nào cho khách, bạn PHẢI đính kèm đường link mua chính xác đã được cung cấp trong danh sách bằng cú pháp Markdown: [Tên sản phẩm](Đường link chính xác). TUYỆT ĐỐI KHÔNG liệt kê tên sản phẩm trơn không có đường link!
+- DẮT DẪN KHÉO LÉO: Tìm hiểu nguyên nhân (ví dụ: kích thước hồ cá, nước bị đục, cá bị nấm...) rồi gợi ý đúng món phụ kiện/thuốc giải quyết tận gốc vấn đề của khách.
+- NẾU SẢN PHẨM KHÁCH HỎI Thuộc danh sách [TẠM HẾT HÀNG]: Nói khéo léo là tiệm đang tạm hết món này, và nhiệt tình gợi ý sản phẩm tương tự còn hàng trong danh sách.
 
 [NGỮ CẢNH HỆ THỐNG]:
 " . $location_instruction . "
