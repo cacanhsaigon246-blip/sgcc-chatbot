@@ -6,7 +6,7 @@
 
 // ─── CONFIG ───────────────────────────────────────────────────
 const CONFIG = {
-  API_BASE_URL: '', // Để trống = cùng domain, hoặc 'https://chatbot.saigoncacanh.com'
+  API_BASE_URL: 'https://chatbot.saigoncacanh.com',
   GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID', // Anh điền vào sau
   GUEST_MESSAGE_LIMIT: 5,
   BOT_NAME: 'Sài Gòn Cá Cảnh',
@@ -371,7 +371,7 @@ Nhiệm vụ trọng tâm:
     }
   ];
 
-  const res = await fetch(`proxy.php`, {
+  const res = await fetch(`${CONFIG.API_BASE_URL}/proxy.php`, {
     method: 'POST',
     headers: headers,
     body: JSON.stringify({ contents: contents })
