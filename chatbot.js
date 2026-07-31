@@ -334,7 +334,7 @@ function saveChatLog(user, question, answer, isFallback = false) {
   }).catch(e => console.error('[SGCC] Loi luu log chat len server:', e));
 }
 
-// ─── SMART FALLBACK TỪ KHO KIẾN THỨC (CẤU TRÚC 3 PHẦN: ADSENSE + SHOPEE) ────
+// ─── SMART FALLBACK TỪ KHO KIẾN THỨC ────
 function searchSmartFallback(query) {
   const lowerQ = query.toLowerCase();
   if (typeof KNOWLEDGE_BASE !== 'undefined' && KNOWLEDGE_BASE.articles) {
@@ -342,10 +342,10 @@ function searchSmartFallback(query) {
       lowerQ.split(' ').some(w => w.length > 2 && a.title.toLowerCase().includes(w))
     );
     if (match) {
-      return `Dạ về **${match.title}**, em xin tóm tắt giải pháp nhanh cho anh ạ:\n\n${match.summary}\n\n📖 **Anh/chị xem hướng dẫn chi tiết từng bước tại bài viết này nhé:**\n👉 [${match.title}](${match.url || 'https://saigoncacanh.com'})\n\n🛍️ **Anh/chị có thể tham khảo mua sản phẩm chính hãng giao nhanh tại Siêu thị Shopee:**\n👉 [Siêu Thị Sản Phẩm Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)`;
+      return `Dạ anh ơi, về **${match.title}**, em tóm tắt nhanh giải pháp cho anh nè:\n\n${match.summary}\n\n📖 Anh có thể đọc thêm bài viết chi tiết tại đây nhé: [${match.title}](${match.url || 'https://saigoncacanh.com'})\n\n🛒 Cần đặt sản phẩm hoặc đồ nghề xử lý ngay thì anh ghé gian hàng bên em xem nhé: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)`;
     }
   }
-  return `Dạ về câu hỏi của anh: "*${query}*", em xin tư vấn giải pháp nhanh cho anh ạ! 🐟\n\n- Với các dòng cá cảnh, thức ăn và phụ kiện, anh có thể tham khảo bài viết hướng dẫn trên website chính:\n👉 📖 [Xem bài viết hướng dẫn nuôi cá tại saigoncacanh.com](https://saigoncacanh.com)\n\n- Để xem giá và đặt mua sản phẩm/thuốc chữa bệnh giao nhanh trên Shopee:\n👉 🛍️ [Ghé Siêu Thị Shopee Affiliate Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)\n\n<div style="margin-top:10px"><a href="https://zalo.me/0938604144" target="_blank" class="btn-zalo" style="padding:10px 18px;font-weight:bold;font-size:14px;background:#0068FF;color:white;border-radius:10px;text-decoration:none;display:inline-block">💬 Chat Trực Tiếp Qua Zalo Shop</a></div>`;
+  return `Chào anh ạ! 🐟 Em là trợ lý Sài Gòn Cá Cảnh nè.\n\nVề câu hỏi "*${query}*", anh có thể xem các thông tin chia sẻ kinh nghiệm nuôi cá và cách xử lý tại: [Bài viết hướng dẫn nuôi cá - saigoncacanh.com](https://saigoncacanh.com)\n\nNếu cần tìm phụ kiện, thức ăn hay thuốc trị bệnh cá đúng chuẩn, anh ghé tham khảo trực tiếp trên gian hàng bên em tại: [Siêu Thị Sản Phẩm Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nhé ạ!`;
 }
 
 function sendQuickReply(text) {
@@ -362,18 +362,15 @@ function insertQuestion(text) {
 async function callBackendSSE(message) {
   const headers = { 'Content-Type': 'application/json' };
 
-  const systemInstruction = `Bạn là chuyên gia cá cảnh và là trợ lý AI chuyên nghiệp của Sài Gòn Cá Cảnh (saigoncacanh.com).
-Xưng hô: Luôn gọi khách hàng là "anh" hoặc "chị", tự xưng là "em". Thái độ chuyên nghiệp, nhiệt tình, thấu hiểu.
+  const systemInstruction = `Bạn là trợ lý AI thân thiện, nhiệt tình của cửa hàng tiệm cá cảnh 'Sài Gòn Cá Cảnh' (địa chỉ 246 Hồ Văn Huê, Phú Nhuận, TP.HCM).
+Xưng hô: Luôn gọi khách hàng là "anh" (hoặc "chị" tùy ngữ cảnh) và tự xưng là "em". 
+Văn phong: Nói chuyện tự nhiên, gần gũi, mộc mạc, nhiệt tình đúng chất anh em chơi cá Sài Gòn. Tuyệt đối KHÔNG trả lời mang tính văn mẫu rập khuôn kiểu: "Dạ về câu hỏi của anh... em xin tư vấn giải pháp nhanh cho anh ạ". Trả lời trực tiếp, hào hứng, tự nhiên như 2 người bạn đam mê cá đang trao đổi với nhau.
 
-Nhiệm vụ của bạn:
-1. TƯ VẤN CHUYÊN NGHIỆP: Trả lời câu hỏi của khách hàng một cách đầy đủ, chính xác, có chuyên môn và dễ hiểu (dùng gạch đầu dòng để trình bày rõ ràng). Tuyệt đối không trả lời cộc lốc 1-2 câu ngắn ngủn.
-2. ĐIỀU HƯỚNG BÀI VIẾT (QUAN TRỌNG): LUÔN tìm cách khéo léo chèn link bài viết trên website để khách đọc thêm chi tiết, dùng định dạng Markdown: [Tên bài viết](Link bài viết).
-3. ĐIỀU HƯỚNG MUA HÀNG: Nếu khách hỏi mua phụ kiện, thức ăn, vật liệu lọc, thuốc, hãy gợi ý khách mua tại Siêu thị Shopee Affiliate: https://shop.saigoncacanh.com hoặc liên hệ trực tiếp Zalo Shop.
-
-Cấu trúc câu trả lời gợi ý:
-- 💡 Tư vấn chi tiết, đưa ra nguyên nhân và cách xử lý tận gốc cho khách.
-- 📖 "Anh/chị tham khảo thêm hướng dẫn chi tiết tại đây nhé: [Tên bài viết](Link bài viết)"
-- 🛍️ "Để mua sản phẩm/thuốc chính hãng giao nhanh, anh/chị ghé Siêu thị Shopee bên em ạ: https://shop.saigoncacanh.com"`;
+Nhiệm vụ trọng tâm:
+1. TRAO ĐỔI VỚI KHÁCH: Trả lời ngắn gọn, đúng trọng tâm vấn đề bệnh cá, phụ kiện, thức ăn, chăm sóc nước.
+2. GỢI Ý SẢN PHẨM KHÉO LÉO: Đưa ra thông tin sản phẩm cụ thể từ danh sách POS (có tên sản phẩm, giá bán, tình trạng còn hàng). 
+3. LINK GIAN HÀNG SẢN PHẨM: Đưa ra link xem và mua sản phẩm trực tiếp từ hệ thống gian hàng chính thức: https://shop.saigoncacanh.com bằng định dạng [Tên sản phẩm](https://shop.saigoncacanh.com).
+4. KHÔNG nhắc tới nút bấm hoặc liên hệ Zalo nữa.`;
 
   const contents = [
     {
