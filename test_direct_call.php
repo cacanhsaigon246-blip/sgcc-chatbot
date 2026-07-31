@@ -1,22 +1,33 @@
 <?php
-$proxy_url = 'https://chatbot.saigoncacanh.com/proxy.php';
+header('Content-Type: text/plain; charset=utf-8');
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-$payload = json_encode([
+$api_key = trim(file_get_contents(__DIR__ . '/gemini_key.txt'));
+$model = 'gemini-3.5-flash';
+
+$data = [
     'contents' => [
         [
             'role' => 'user',
             'parts' => [
-                ['text' => "Bạn là chuyên gia cá cảnh...\n\nCâu hỏi của khách: xin chao"]
+                ['text' => 'Bên tiệm có vật liệu lọc không?']
             ]
         ]
     ]
+];
+
+$gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
+
+$ch = curl_init($gemini_url);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => json_encode($data),
+    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+    CURLOPT_TIMEOUT        => 15
 ]);
 
-$ch = curl_init($proxy_url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $response = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
