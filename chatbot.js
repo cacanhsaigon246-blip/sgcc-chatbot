@@ -244,17 +244,6 @@ async function sendMessage() {
 
   if (!text && !hasImage) return;
 
-  // Kiểm tra giới hạn tin nhắn đối với khách vãng lai
-  if (!checkMessageLimit()) {
-    hideTyping();
-    addBotMessage(`💡 **Trợ lý AI đã tư vấn hết 5 lượt câu hỏi miễn phí dành cho khách vãng lai ạ.**\n\nĐể tiếp tục trò chuyện không giới hạn, anh/chị vui lòng nhấn nút **ĐĂNG NHẬP** ở góc trên bên phải website saigoncacanh.com để kích hoạt thành viên (Hoàn toàn miễn phí và nhanh chóng ạ!).`);
-    input.value = '';
-    return;
-  }
-
-  // Tăng đếm tin nhắn khách vãng lai
-  incrementGuestCount();
-
   state.isTyping = true;
   const sendBtn = document.getElementById('send-btn');
   if (sendBtn) sendBtn.disabled = true;
