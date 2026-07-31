@@ -242,7 +242,7 @@
       } catch (e) {
         console.warn('[SGCC] Khong the doc thong tin user WordPress:', e);
       }
-      iframe.src = CHAT_URL + '?nocache=' + new Date().getTime() + userParam;
+      iframe.src = CHAT_URL + '?v=' + new Date().getTime() + userParam;
     }
 
     wrap.classList.add('open');
