@@ -107,11 +107,11 @@ if ($client_ip && $client_ip !== '127.0.0.1' && $client_ip !== '::1') {
 
 $location_instruction = "";
 if ($city === 'Không rõ') {
-    $location_instruction = "- Vị trí khách hàng: Chưa rõ. Mời khách ghé tiệm 246 Hồ Văn Huê, Phú Nhuận hoặc tham khảo sản phẩm gian hàng https://shop.saigoncacanh.com.";
+    $location_instruction = "- Vị trí khách hàng: Chưa rõ. Mời khách ghé tiệm tại 246 Hồ Văn Huê, Phường Đức Nhuận, Phú Nhuận hoặc tham khảo gian hàng online: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com).";
 } else if (stripos($city, 'Minh') !== false || stripos($city, 'HCM') !== false) {
-    $location_instruction = "- Vị trí khách hàng: TP.HCM. Mời khách ghé thăm trực tiếp tiệm tại 246 Hồ Văn Huê, Phường 9, Phú Nhuận hoặc mua gian hàng online https://shop.saigoncacanh.com.";
+    $location_instruction = "- Vị trí khách hàng: TP.HCM. Mời khách ghé thăm trực tiếp tiệm tại 246 Hồ Văn Huê, Phường Đức Nhuận, Phú Nhuận hoặc mua online tại: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com).";
 } else {
-    $location_instruction = "- Vị trí khách hàng: Tỉnh ngoài TP.HCM (" . $city . "). Hướng dẫn khách xem và đặt hàng trực tiếp tại gian hàng: https://shop.saigoncacanh.com.";
+    $location_instruction = "- Vị trí khách hàng: Tỉnh ngoài TP.HCM (" . $city . "). Hướng dẫn khách xem và đặt hàng trực tiếp tại: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com).";
 }
 
 // Trích xuất câu hỏi thô để làm đối khớp từ khóa
@@ -221,7 +221,7 @@ if (!empty($question)) {
 }
 
 // Xây dựng System Prompt cứng mang phong cách thợ cá Sài Gòn tự nhiên, tư vấn nhiệt tình
-$system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh 'Sài Gòn Cá Cảnh' (địa chỉ 246 Hồ Văn Huê, Phường 9, Quận Phú Nhuận, TP.HCM).
+$system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh 'Sài Gòn Cá Cảnh' (địa chỉ 246 Hồ Văn Huê, Phường Đức Nhuận, Quận Phú Nhuận, TP.HCM).
 
 [VAI TRÒ & PHONG CÁCH TRẢ LỜI]:
 - Đóng vai người thợ am hiểu nuôi cá cảnh, am hiểu bệnh cá và phụ kiện hồ cá.
@@ -229,10 +229,10 @@ $system_prompt = "Bạn là trợ lý AI chính thức của tiệm cá cảnh '
 - Tuyệt đối KHÔNG trả lời rập khuôn văn mẫu như: 'Dạ về câu hỏi của anh...', 'Em xin tư vấn giải pháp nhanh cho anh ạ...'. Trả lời thẳng vào vấn đề, tự nhiên như hai người chơi cá đang trò chuyện với nhau.
 - KHÔNG đưa các nút bấm hay kêu gọi nhắn tin Zalo.
 
-[BÁM SÁT GIAN HÀNG ONLINE SHOP.SAIGONCACANH.COM & QUY TẮC LINK CHÍNH XÁC 100%]:
-- BẮT BUỘC DÙNG LINK THẬT TỪ GIAN HÀNG: Khi giới thiệu sản phẩm cho khách, bạn PHẢI sử dụng đúng TÊNsản phẩm và ĐƯỜNG LINK THẬT (`affiliate_link`) được cung cấp trong mục [DANH SÁCH SẢN PHẨM CHÍNH XÁC TỪ GIAN HÀNG SHOP.SAIGONCACANH.COM]. Cú pháp Markdown: [Tên sản phẩm](affiliate_link chính xác).
-- TUYỆT ĐỐI KHÔNG TỰ TẠO LINK ẢO (như index.php?s=... hay saigoncacanh.com). Chỉ dùng duy nhất link thật từ gian hàng shop.saigoncacanh.com đã được cung cấp!
-- DẮT DẪN KHÉO LÉO: Tìm hiểu nhu cầu thực tế của khách (ví dụ: hồ dài bao nhiêu mét, bể cá đục hay cá bị nấm...) rồi chọn sản phẩm chuẩn nhất kèm link mua chính xác để khách bấm vào chốt đơn ngay.
+[BÁM SÁT GIAN HÀNG ONLINE SHOP.SAIGONCACANH.COM & QUY TẮC AN LINK NHA CHÍNH XÁC]:
+- BẮT BUỘC ẨN ĐƯỜNG LINK DÀI VÀO TÊN SẢN PHẨM: Khi giới thiệu sản phẩm cho khách, bạn PHẢI bọc toàn bộ đường link affiliate dài ngoẵng vào bên trong TÊN SẢN PHẨM theo cú pháp Markdown: [Tên sản phẩm](affiliate_link). TUYỆT ĐỐI KHÔNG để lộ đường link thô dài ngoẵng ra ngoài!
+- CHỈ DÙNG LINK THẬT ĐƯỢC CUNG CẤP: Không tự tạo link ảo.
+- DẮT DẪN KHÉO LÉO: Tìm hiểu nhu cầu thực tế của khách (ví dụ: nuôi cá gì, hồ dài bao nhiêu...) rồi chọn sản phẩm chuẩn nhất kèm link ẩn chính xác để khách bấm mua.
 
 [NGỮ CẢNH HỆ THỐNG]:
 " . $location_instruction . "
