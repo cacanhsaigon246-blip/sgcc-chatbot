@@ -364,17 +364,21 @@ Nhiệm vụ trọng tâm:
 3. LINK GIAN HÀNG SẢN PHẨM: Đưa ra link xem và mua sản phẩm trực tiếp từ hệ thống gian hàng chính thức: https://shop.saigoncacanh.com bằng định dạng [Tên sản phẩm](https://shop.saigoncacanh.com).
 4. KHÔNG nhắc tới nút bấm hoặc liên hệ Zalo nữa.`;
 
-  const contents = [
-    {
-      role: 'user',
-      parts: [{ text: `${systemInstruction}\n\nCâu hỏi của khách: ${message}` }]
-    }
-  ];
+  // Chuẩn bị payload kèm lịch sử trò chuyện
+  const historyParts = state.chatHistory.map(h => ({
+    role: h.role === 'model' ? 'model' : 'user',
+    parts: [{ text: h.content }]
+  }));
+
+  historyParts.push({
+    role: 'user',
+    parts: [{ text: message }]
+  });
 
   const res = await fetch(`${CONFIG.API_BASE_URL}/proxy.php`, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify({ contents: contents })
+    body: JSON.stringify({ contents: historyParts })
   });
 
   if (!res.ok) {

@@ -116,19 +116,12 @@ if ($city === 'Không rõ') {
     $location_instruction = "- Vị trí khách hàng: Tỉnh ngoài TP.HCM (" . $city . "). Hướng dẫn khách xem và đặt hàng trực tiếp tại: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com).";
 }
 
-// Trích xuất câu hỏi thô để làm đối khớp từ khóa
+// Trích xuất câu hỏi mới nhất từ phần tử cuối cùng của contents
 $question = '';
-if (isset($data['contents'][0]['parts'][0]['text'])) {
-    $prompt_text = $data['contents'][0]['parts'][0]['text'];
-    $parts_lines = explode("\n", $prompt_text);
-    foreach (array_reverse($parts_lines) as $line) {
-        if (stripos($line, 'Câu hỏi của khách:') !== false) {
-            $question = trim(str_ireplace('Câu hỏi của khách:', '', $line));
-            break;
-        }
-    }
-    if (empty($question)) {
-        $question = $prompt_text;
+if (!empty($data['contents']) && is_array($data['contents'])) {
+    $last_item = end($data['contents']);
+    if (isset($last_item['parts'][0]['text'])) {
+        $question = $last_item['parts'][0]['text'];
     }
 }
 
