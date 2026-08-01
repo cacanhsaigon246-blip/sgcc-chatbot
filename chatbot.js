@@ -141,11 +141,14 @@ function renderGoogleButton() {
   try {
     google.accounts.id.renderButton(container, {
       theme: 'filled_blue',
-    size: 'large',
-    text: 'signin_with',
-    locale: 'vi',
-    width: 280,
-  });
+      size: 'large',
+      text: 'signin_with',
+      locale: 'vi',
+      width: 280,
+    });
+  } catch (err) {
+    console.warn('[SGCC] Lỗi render Google Button:', err);
+  }
 }
 
 function handleGoogleCredential(response) {
