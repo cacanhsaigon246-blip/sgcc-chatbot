@@ -58,7 +58,14 @@
 - [x] Tối ưu sửa lỗi bọc Markdown link ẩn các đường link affiliate dài ngoẵng vào tên sản phẩm.
 - [x] Cập nhật chuẩn địa chỉ tiệm: **246 Hồ Văn Huê, Phường Đức Nhuận, Phú Nhuận, TP.HCM**.
 - [x] Nâng cấp model AI chuẩn thế hệ mới: **`gemini-3.5-flash-lite`**.
+- [x] Đổi mới Giao diện Lịch sử Chat Admin: Từ bảng thành hộp thoại (Inbox) gom nhóm tự động theo Phiên và IP để phát hiện kẻ tấn công.
+- [x] Khởi tạo **Sổ Tay Huấn Luyện AI**: Phân tích log tự động và chặn đứng nguy cơ rủi ro.
+- [x] Cấy ghép "Khiên Bảo Vệ Pháp Lý": Cấm AI dùng từ tuyệt đối ("cam kết 100%"), yêu cầu chuyển giao mọi trách nhiệm bảo hành/hoàn tiền về sàn Shopee để bảo vệ uy tín cửa hàng vật lý. Lệnh khẩn cấp từ chối đáp lời kẻ xấu cãi cùn.
+- [x] Nâng cấp toàn diện **3-Pass Smart Concept Matcher** diệt sạch bug trùng chữ (`do` trong `dong`), tích hợp **Typebot 1-Touch Chips** & **Open WebUI Carousel Slider**.
+- [x] Xây dựng **Bộ Máy AI Tự Học & Nâng Cấp Tri Thức Real-time 24/7** (`auto_learn.php`) và **Bảng Danh Sách Bài Học Chatbot Đã Thuộc** trực quan trên Admin Panel.
+- [x] Thổi Hồn **Trí Tuệ Thợ Cá Sài Gòn Lâu Năm** vào toàn bộ câu trả lời AI (tự nhiên, chân thành, phân tích nguyên nhân & đưa phác đồ 3 bước mượt mà).
 
 ### 🟡 Định hướng tiếp theo:
 - [/] Khởi tạo kho sao lưu GitHub `saigoncacanh-woocommerce` bảo vệ website chính.
+- [/] Cào dữ liệu "Vật liệu lọc", "Máy bơm" từ Shopee để làm giàu kho sản phẩm.
 - [/] Theo dõi các câu hỏi chưa trả lời trên Admin để tối ưu dần kho kiến thức.

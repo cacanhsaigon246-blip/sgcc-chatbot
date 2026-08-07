@@ -2,7 +2,7 @@
 $ftpHost = "ftp://187.127.126.46/domains/saigoncacanh.com/public_html/chatbot/"
 $username = "u972437838"
 $password = "Cannabis041188@"
-$localDir = "C:\Users\SAIGONCACANH\.gemini\antigravity\scratch\sgcc-chatbot"
+$localDir = "E:\Backup_Ghi_Nho_Antigravity\01_Du_An_Code\sgcc-chatbot"
 
 Write-Host "🚀 Dang tai file Chatbot len Hostinger FTP ($ftpHost)..." -ForegroundColor Cyan
 

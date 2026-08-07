@@ -19,7 +19,7 @@
   var style = document.createElement('style');
   style.textContent = `
     #sgcc-widget-btn {
-      position: fixed; bottom: 24px; right: 24px; z-index: 99999;
+      position: fixed; bottom: 85px; right: 24px; z-index: 99999999;
       width: 60px; height: 60px; border-radius: 50%;
       background: linear-gradient(135deg, ${BRAND_COLOR}, ${ACCENT_COLOR});
       border: none; cursor: pointer; outline: none;

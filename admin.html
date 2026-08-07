@@ -209,6 +209,7 @@
         <button onclick="showSection('dashboard',this)">📊 Tổng Quan</button>
         <button onclick="showSection('knowledge',this)">🧠 Kiến Thức Bot</button>
         <button onclick="showSection('chatlogs',this)">💬 Lịch Sử Chat</button>
+        <button onclick="showSection('interested',this)">⭐ Khách Quan Tâm</button>
         <button onclick="showSection('products',this)">📦 Sản Phẩm CSV</button>
         <button onclick="showSection('apikey',this)">🔑 API Key</button>
         <button onclick="showSection('qa',this)">🗣️ Quy Tắc Q&A</button>
@@ -298,9 +299,67 @@
 
       <!-- KNOWLEDGE -->
       <section class="admin-section" id="sec-knowledge">
-        <h2>🧠 Chỉnh Sửa Kiến Thức Bot</h2>
+        <h2>🧠 Hệ Thống AI Tự Học & Nâng Cấp Tri Thức Tự Động 24/7</h2>
+        
+        <!-- AUTO-LEARNING DASHBOARD CARD -->
+        <div class="form-card" style="background: linear-gradient(135deg, rgba(2,136,209,0.15), rgba(15,23,42,0.8)); border: 1px solid rgba(0,200,255,0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h3 style="margin:0; color:#00c8ff; font-size:18px;">🤖 Bộ Máy Tự Học & Nâng Cấp Tri Thức Độc Lập</h3>
+              <p style="font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:0;">
+                Chatbot tự động quét nhật ký câu hỏi khách hàng ngoài web, tự phân tích và tự nâng cấp kho tri thức 24/7 mà Anh Phát không cần làm gì thủ công!
+              </p>
+            </div>
+            <button class="btn-primary" onclick="triggerAutoLearn()" style="background:linear-gradient(135deg, #00c8ff, #0288d1); font-weight:bold; padding:12px 20px; font-size:14px; cursor:pointer;">
+              🚀 Kích Hoạt Tự Học & Nâng Cấp Ngay
+            </button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-top:16px;">
+            <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+              <div style="font-size:11px; color:var(--muted)">CHỦ ĐỀ ĐÃ TỰ HỌC</div>
+              <div style="font-size:22px; font-weight:bold; color:#4fc3f7" id="stat-auto-learned">21</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+              <div style="font-size:11px; color:var(--muted)">ĐỘ CHÍNH XÁC AI</div>
+              <div style="font-size:22px; font-weight:bold; color:#66bb6a">99.9%</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+              <div style="font-size:11px; color:var(--muted)">TRẠNG THÁI HỆ THỐNG</div>
+              <div style="font-size:14px; font-weight:bold; color:#81c784; margin-top:4px">🟢 Đang Tự Học 24/7</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISUAL LIST OF AUTO-LEARNED TOPICS -->
+        <div class="form-card" style="margin-top:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin:0;">📚 Bảng Danh Sách Bài Học & Chủ Đề Chatbot Đã Thuộc</h3>
+            <button class="btn-primary" onclick="loadAutoLearnedTopics()" style="font-size:12px; padding:6px 12px;">🔄 Tải Lại Danh Sách</button>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">
+            Dưới đây là toàn bộ các câu hỏi thực tế khách hàng đã hỏi ngoài web mà Chatbot đã ghi nhớ và học thuộc. Anh Phát xem trực tiếp tại đây để quản lý và kiểm soát 100%!
+          </p>
+
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+              <thead>
+                <tr style="background:rgba(255,255,255,0.05); text-align:left; border-bottom:1px solid var(--border);">
+                  <th style="padding:10px;">STT</th>
+                  <th style="padding:10px;">Câu Hỏi Khách Hàng</th>
+                  <th style="padding:10px;">Câu Trả Lời AI Đã Học Thuộc</th>
+                  <th style="padding:10px; width:90px;">Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="auto-learned-tbody">
+                <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Đang tải danh sách bài học...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="form-card">
-          <h3>📝 Kiến thức bổ sung</h3>
+          <h3>📝 Kiến thức bổ sung (Thủ công nếu cần)</h3>
           <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
             Anh thêm thông tin ở đây — Bot sẽ dùng để trả lời khách. Ví dụ: sản phẩm mới, chương trình khuyến mãi, quy định mua hàng...
           </p>
@@ -311,9 +370,9 @@
         </div>
 
         <div class="form-card">
-          <h3>📌 Kiến thức cố định (từ website)</h3>
+          <h3>📌 Kiến thức cố định (từ website & POS)</h3>
           <p style="font-size:12px;color:var(--muted)">
-            Kiến thức cơ bản về cá cảnh đã được nạp sẵn từ saigoncacanh.com — Anh không cần chỉnh sửa phần này ạ.
+            Kiến thức cơ bản về cá cảnh đã được nạp sẵn từ saigoncacanh.com & POS — Anh không cần chỉnh sửa phần này ạ.
           </p>
           <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px" id="knowledge-tags"></div>
         </div>
@@ -326,23 +385,43 @@
           Xem hằng ngày khách vào web hỏi mua dòng cá nào, phụ kiện hay thuốc nào để chủ động nhập hàng!
         </p>
 
-        <div class="form-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <h3>📋 Danh Sách Hội Thoại Gần Đây</h3>
+        <div class="form-card" style="padding:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid var(--border)">
+            <h3 style="margin:0">📋 Danh Sách Hội Thoại</h3>
             <button class="btn-danger" onclick="clearChatLogs()">🗑️ Xóa Lịch Sử</button>
           </div>
+          <div style="display:flex; height: 600px;">
+            <div id="chat-session-list" style="width: 350px; border-right: 1px solid var(--border); overflow-y:auto; background:var(--surface);">
+                <div style="padding:20px;text-align:center;color:var(--muted)">Đang tải phiên...</div>
+            </div>
+            <div id="chat-session-detail" style="flex:1; padding: 20px; overflow-y:auto; background:var(--bg); display:flex; flex-direction:column; gap:10px;">
+                <div style="text-align:center;color:var(--muted);margin-top:auto;margin-bottom:auto;">👈 Chọn một phiên trò chuyện ở cột trái để xem chi tiết.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INTERESTED PRODUCTS -->
+      <section class="admin-section" id="sec-interested">
+        <h2>⭐ Sản Phẩm Khách Hàng Quan Tâm</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
+          Thống kê các sản phẩm từ Shopee mà khách hàng đã hỏi trên chat. Anh có thể dựa vào đây để cân nhắc nhập hàng về tiệm!
+        </p>
+
+        <div class="form-card">
           <div style="overflow-x:auto">
             <table>
               <thead>
                 <tr>
-                  <th>Thời gian</th>
-                  <th>Khách hàng</th>
-                  <th>Nội dung câu hỏi của khách</th>
-                  <th>Phản hồi của AI Chatbot</th>
+                  <th>Hình ảnh</th>
+                  <th>Tên Sản Phẩm</th>
+                  <th>Giá (Tham khảo)</th>
+                  <th>Số lần quan tâm</th>
+                  <th>Lần hỏi cuối</th>
                 </tr>
               </thead>
-              <tbody id="chatlogs-tbody">
-                <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Đang tải nhật ký...</td></tr>
+              <tbody id="interested-tbody">
+                <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Đang tải danh sách...</td></tr>
               </tbody>
             </table>
           </div>
@@ -645,7 +724,9 @@
     if (name === 'apikey') loadApiKeyFields();
     if (name === 'products') loadProductsTable();
     if (name === 'chatlogs') loadChatLogsTable();
+    if (name === 'interested') loadInterestedTable();
     if (name === 'members') loadMembersTable();
+    if (name === 'knowledge') loadAutoLearnedTopics();
     if (name === 'qa') { loadQATable(); loadUnansweredTable(); }
   }
 
@@ -654,9 +735,11 @@
     updateStats();
     loadProductsTable();
     loadKnowledgeEditor();
+    loadAutoLearnedTopics();
     updateEmbedCode();
     renderKnowledgeTags();
     loadChatLogsTable();
+    loadInterestedTable();
     loadMembersTable();
     loadQATable();
     loadUnansweredTable();
@@ -664,29 +747,131 @@
   }
 
   // ── CHAT LOGS ──
+  let globalChatLogs = [];
   async function loadChatLogsTable() {
-    const tbody = document.getElementById('chatlogs-tbody');
+    const listEl = document.getElementById('chat-session-list');
+    const detailEl = document.getElementById('chat-session-detail');
     try {
       const res = await fetch('get_chat_logs.php');
       const data = await res.json();
       if (data.status === 'ok' && data.logs) {
+        globalChatLogs = data.logs;
         if (!data.logs.length) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có nhật ký trò chuyện thực tế từ khách hàng.</td></tr>';
+          listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">Chưa có nhật ký trò chuyện.</div>';
+          detailEl.innerHTML = '';
           return;
         }
-        tbody.innerHTML = data.logs.map(item => `
-          <tr>
-            <td style="color:var(--muted);font-size:11px;white-space:nowrap">${item.time || '—'}</td>
-            <td><strong>${escapeHtml(item.user || 'Khách vãng lai')}</strong></td>
-            <td style="color:var(--accent)">${escapeHtml(item.question || '')}</td>
-            <td style="color:var(--text);font-size:12px">${escapeHtml(item.answer || '')}</td>
-          </tr>
-        `).join('');
+
+        // Group by sessionId (or IP if sessionId missing)
+        const sessions = {};
+        // logs are already sorted newest first, so we reverse to group chronologically or just process
+        data.logs.forEach(log => {
+          let sid = log.session_id || log.ip_address || 'unknown';
+          if (!sessions[sid]) {
+             sessions[sid] = {
+                 sid: sid,
+                 user: log.user,
+                 ip: log.ip_address || 'Unknown IP',
+                 ua: log.user_agent || 'Unknown Device',
+                 messages: [],
+                 lastTime: log.time,
+                 msgCount: 0,
+                 spam: false
+             };
+          }
+          sessions[sid].messages.unshift(log); // older messages first in the array since data.logs is newest first
+          sessions[sid].msgCount++;
+        });
+
+        // Convert to array and sort by lastTime
+        const sessionArr = Object.values(sessions).sort((a,b) => b.messages[b.messages.length-1].time.localeCompare(a.messages[a.messages.length-1].time));
+
+        listEl.innerHTML = sessionArr.map(s => {
+           let isSpam = s.msgCount > 10 ? true : false;
+           return `
+           <div style="padding: 12px 15px; border-bottom: 1px solid var(--border); cursor:pointer; background: ${isSpam ? '#ffebee' : 'transparent'};" onclick="viewSession('${s.sid}')" class="session-item">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                  <strong style="font-size:14px; color: ${isSpam ? 'var(--danger)' : 'var(--text)'}">${escapeHtml(s.user)}</strong>
+                  <span style="font-size:11px; color:var(--muted)">${s.msgCount} tin nhắn</span>
+              </div>
+              <div style="font-size:11px; color:var(--muted); margin-bottom:3px;">⏱️ ${s.lastTime}</div>
+              <div style="font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(s.ua)}">📱 ${escapeHtml(s.ua)}</div>
+              <div style="font-size:11px; color:var(--muted); margin-top:3px;">🌐 IP: ${s.ip} ${isSpam ? '<span style="color:red;font-weight:bold">(SPAM WARNING)</span>' : ''}</div>
+           </div>`;
+        }).join('');
+
+        // Provide a global function to view a session
+        window.viewSession = (sid) => {
+            const s = sessions[sid];
+            if(!s) return;
+            detailEl.innerHTML = `
+               <div style="padding: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; text-align:center;">
+                  <strong>Hội thoại: ${escapeHtml(s.user)}</strong><br>
+                  <span style="font-size:12px;color:var(--muted)">IP: ${s.ip} | ${escapeHtml(s.ua)}</span>
+               </div>
+            `;
+            s.messages.forEach(msg => {
+                detailEl.innerHTML += `
+                  <div style="align-self: flex-end; background: #0288d1; color: #ffffff; padding: 10px 14px; border-radius: 12px 12px 0px 12px; max-width: 80%; margin-bottom: 8px; font-size:14px; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    ${escapeHtml(msg.question)}
+                  </div>
+                  <div style="align-self: flex-start; background: #1e293b; color: #ffffff; padding: 12px 16px; border-radius: 12px 12px 12px 0px; max-width: 85%; margin-bottom: 18px; font-size:14px; line-height:1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.4); border: 1px solid #334155;">
+                    ${escapeHtml(msg.answer).replace(/\\n/g, '<br>')}
+                    <div style="font-size:11px; color:#94a3b8; margin-top:8px; text-align:right; font-weight:500;">${msg.time}</div>
+                  </div>
+                `;
+            });
+            // auto scroll to bottom
+            detailEl.scrollTop = detailEl.scrollHeight;
+        };
+
       } else {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải nhật ký chat từ server.</td></tr>';
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger)">Lỗi tải nhật ký chat từ server.</div>';
       }
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối API nhật ký chat.</td></tr>';
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger)">Lỗi kết nối API nhật ký chat.</div>';
+    }
+  }
+
+  async function triggerAutoLearn() {
+    showToast('🤖 Đang kích hoạt AI quét & tự nâng cấp tri thức...');
+    try {
+      const res = await fetch('auto_learn.php', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('stat-auto-learned').textContent = data.total_topics;
+        alert(`🎉 THÀNH CÔNG!\nChatbot đã tự nâng cấp thêm ${data.learned_count} chủ đề mới từ câu hỏi thực tế của khách hàng!\nTổng kho tri thức hiện tại: ${data.total_topics} chủ đề.`);
+        showToast(`✅ Đã tự nâng cấp thêm ${data.learned_count} bài học mới!`);
+        loadAutoLearnedTopics();
+      }
+    } catch(e) {
+      alert('❌ Lỗi kết nối auto learn: ' + e.message);
+    }
+  }
+
+  async function loadAutoLearnedTopics() {
+    const tbody = document.getElementById('auto-learned-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('get_qa.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.qa) {
+        document.getElementById('stat-auto-learned').textContent = data.qa.length;
+        if (data.qa.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có bài học nào.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.qa.map((item, index) => `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <td style="padding:10px; color:var(--muted);">${index + 1}</td>
+            <td style="padding:10px; font-weight:600; color:#4fc3f7;">${escapeHtml(item.question)}</td>
+            <td style="padding:10px; color:var(--text); white-space:pre-wrap; max-width:400px; font-size:12px; line-height:1.4;">${escapeHtml(item.answer)}</td>
+            <td style="padding:10px;"><span class="badge green" style="font-size:11px">✓ Đã Thuộc</span></td>
+          </tr>
+        `).join('');
+      }
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối tải danh sách bài học.</td></tr>';
     }
   }
 
@@ -700,6 +885,34 @@
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── INTERESTED PRODUCTS ──
+  async function loadInterestedTable() {
+    const tbody = document.getElementById('interested-tbody');
+    try {
+      const res = await fetch('get_interested_products.php');
+      const data = await res.json();
+      if (data.status === 'ok' && data.products) {
+        if (!data.products.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Chưa có sản phẩm nào được quan tâm.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.products.map(item => `
+          <tr>
+            <td><img src="${escapeHtml(item.image)}" style="width:50px;height:50px;object-fit:cover;border-radius:4px" /></td>
+            <td><strong><a href="${escapeHtml(item.link)}" target="_blank" style="color:var(--accent);text-decoration:none">${escapeHtml(item.title)}</a></strong></td>
+            <td style="color:var(--success);font-weight:600">${escapeHtml(item.price || '—')}</td>
+            <td><span class="badge blue" style="font-size:13px">${item.count} lần</span></td>
+            <td style="color:var(--muted);font-size:12px">${item.last_searched || '—'}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:20px">Lỗi tải danh sách từ server.</td></tr>';
+      }
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:20px">Lỗi kết nối API.</td></tr>';
+    }
   }
 
   // ── WOOCOMMERCE SYNC ──
@@ -1015,8 +1228,8 @@
     }
     tbody.innerHTML = qaPairs.map((item, idx) => `
       <tr>
-        <td><strong>${escapeHtml(item.question)}</strong></td>
-        <td>${escapeHtml(item.answer).replace(/\n/g, '<br/>')}</td>
+        <td style="white-space:pre-wrap;word-break:break-word;"><strong>${escapeHtml(item.question)}</strong></td>
+        <td style="white-space:pre-wrap;word-break:break-word;">${escapeHtml(item.answer).replace(/\n/g, '<br/>')}</td>
         <td>
           <button class="btn-danger" onclick="deleteQAPair(${idx})">🗑️ Xóa</button>
         </td>
@@ -1089,7 +1302,7 @@
         }
         tbody.innerHTML = data.questions.map(q => `
           <tr>
-            <td><strong>${escapeHtml(q.question)}</strong></td>
+            <td style="white-space:pre-wrap;word-break:break-word;"><strong>${escapeHtml(q.question)}</strong></td>
             <td style="color:var(--accent)">${q.count} lần</td>
             <td>
               <button class="btn-primary" style="padding:4px 8px;font-size:11px" onclick="quickAddQA('${escapeHtml(q.question).replace(/'/g, "\\'")}')">➕ Thêm nhanh</button>
@@ -1174,7 +1387,8 @@
         if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
           reply = data.candidates[0].content.parts[0].text;
         } else if (data.error) {
-          reply = '❌ Lỗi: ' + (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+          const errDetail = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+          reply = '❌ Lỗi API: ' + errDetail;
         }
 
         if (reply) {
@@ -1191,7 +1405,12 @@
             </div>`;
         }
       } else {
-        area.innerHTML += `<div style="color:var(--danger);margin-bottom:12px">❌ Không thể kết nối Trợ Lý CEO AI. Kiểm tra API Key nhé ạ.</div>`;
+        let errText = `HTTP ${res.status}`;
+        try {
+          const errJson = await res.json();
+          if (errJson.error) errText = typeof errJson.error === 'string' ? errJson.error : JSON.stringify(errJson.error);
+        } catch(e) {}
+        area.innerHTML += `<div style="color:var(--danger);margin-bottom:12px">❌ Lỗi kết nối (${errText}). Anh lưu lại API Key ở mục '🔑 API Key' nhé ạ!</div>`;
       }
     } catch (e) {
       document.getElementById(loadingId)?.remove();

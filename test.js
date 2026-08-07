@@ -1,0 +1,3 @@
+const str = "[CARD:Vòng Gi? Th?c An N?i Cho Cá C?nh Hình Tròn Vuông Gom Th?c An|https://shop.saigoncacanh.com/r.php?u=aHR0cHM6Ly9zLnNob3BlZS52bi9hbl9yZWRpcj9vcmlnaW5fbGluaz1odHRwcyUzQSUyRiUyRnNob3BlZS52biUyRlYlQzMlQjJuZy1HaSVFMSVCQiVBRi1UaCVFMSVCQiVBOWMtJUM0JTgybi1OJUUxJUJCJTk1aS1DaG8tQyVDMyVBMS1DJUUxJUJBJUEzbmgtSCVDMyVBQ25oLVRyJUMzJUIybi1WdSVDMyVCNG5nLUdvbS1UaCVFMSVCQiVBOWMtJUM0JTgybi1pLjEyNzEwODUyMDAuMjk2MDYwMzg3NzgmYWZmaWxpYXRlX2lkPTE3Mzg0NzMwNTM4|https://shop.saigoncacanh.com/images/img_36d781e1d0a40acaff2ede3141b77129.jpg|140.000d]";
+const regex = /\[CARD:([^|]+)\|([^|]+)\|([^|]+)\|([^\]]+)\]/g;
+console.log(str.match(regex));

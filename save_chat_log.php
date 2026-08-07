@@ -26,6 +26,8 @@ $user = isset($input['user']) ? trim($input['user']) : 'Khách vãng lai';
 $question = isset($input['question']) ? trim($input['question']) : '';
 $answer = isset($input['answer']) ? trim($input['answer']) : '';
 $is_fallback = isset($input['isFallback']) ? (bool)$input['isFallback'] : false;
+$session_id = isset($input['sessionId']) ? trim($input['sessionId']) : 'unknown';
+$user_agent = isset($input['userAgent']) ? trim($input['userAgent']) : 'unknown';
 
 if (empty($question)) {
     echo json_encode(['status' => 'error', 'message' => 'Câu hỏi rỗng']);
@@ -126,6 +128,9 @@ $short_answer = mb_strlen($answer, 'UTF-8') > 150 ? mb_substr($answer, 0, 150, '
 
 array_unshift($logs, [
     'time' => $time_str,
+    'session_id' => $session_id,
+    'ip_address' => $client_ip,
+    'user_agent' => $user_agent,
     'user' => $user,
     'question' => $question,
     'answer' => $short_answer
@@ -136,20 +141,21 @@ if (count($logs) > 500) {
 }
 file_put_contents($log_file, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-// 2. Nếu là câu trả lời dự phòng (AI chưa biết trả lời), lưu vào danh sách gợi ý chưa trả lời
-if ($is_fallback) {
-    $unanswered_file = __DIR__ . '/unanswered_questions.json';
-    $unanswered = [];
-    if (file_exists($unanswered_file)) {
-        $unanswered = json_decode(file_get_contents($unanswered_file), true) ?: [];
-    }
+// 2. Tự động lưu câu hỏi thực tế của khách hàng vào kho câu hỏi chờ nâng cấp tri thức
+$unanswered_file = __DIR__ . '/unanswered_questions.json';
+$unanswered = file_exists($unanswered_file) ? json_decode(file_get_contents($unanswered_file), true) : [];
+if (!is_array($unanswered)) $unanswered = [];
 
+$clean_q = mb_strtolower(trim($question), 'UTF-8');
+if (mb_strlen($clean_q, 'UTF-8') >= 3) {
     $found = false;
-    $clean_q = mb_strtolower(trim($question), 'UTF-8');
     foreach ($unanswered as &$item) {
-        if (mb_strtolower($item['question'], 'UTF-8') === $clean_q) {
-            $item['count'] += 1;
-            $item['last_asked'] = $now;
+        $q_item = is_string($item) ? mb_strtolower(trim($item), 'UTF-8') : (isset($item['question']) ? mb_strtolower(trim($item['question']), 'UTF-8') : '');
+        if ($q_item === $clean_q) {
+            if (is_array($item)) {
+                $item['count'] = ($item['count'] ?? 1) + 1;
+                $item['last_asked'] = $now;
+            }
             $found = true;
             break;
         }
@@ -158,6 +164,7 @@ if ($is_fallback) {
     if (!$found) {
         $unanswered[] = [
             'question' => $question,
+            'answer' => $answer,
             'count' => 1,
             'last_asked' => $now
         ];

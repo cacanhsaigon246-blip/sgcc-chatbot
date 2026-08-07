@@ -221,16 +221,12 @@ Chủ yếu là phụ kiện, thuốc, vật liệu lọc, thức ăn dòng ph�
 ❌ Tránh: \"Shop em có cá King Kamfa đẹp lắm anh\" (sai — chưa chắc có!)
 ❌ Tránh: \"Bạn nên...\" / \"Người dùng có thể...\"`;
 
-// Quick suggestions for the chatbot UI
 const QUICK_SUGGESTIONS = [
-  { icon: "🐉", text: "Cá Rồng bị đục mắt?" },
-  { icon: "🌊", text: "Hồ mới thả cá khi nào?" },
-  { icon: "🦐", text: "Tép màu bị chết nhiều?" },
-  { icon: "🐠", text: "Cá Betta bị thối vây?" },
-  { icon: "🔧", text: "Thiết kế lọc Sump cho Koi?" },
-  { icon: "💊", text: "Cá bị nấm trắng trị thế nào?" },
-  { icon: "🌡️", text: "Mua sưởi cá loại nào tốt?" },
-  { icon: "💧", text: "Nước hồ bị đục phải làm gì?" },
+  { icon: "🐠", text: "Cần mua cá cảnh" },
+  { icon: "🌊", text: "Nước hồ cá bị đục trắng" },
+  { icon: "⚙️", text: "Máy bơm periha" },
+  { icon: "💊", text: "Cá bị nấm trắng" },
+  { icon: "🏬", text: "Địa chỉ cửa hàng" }
 ];
 
 // Related articles from saigoncacanh.com

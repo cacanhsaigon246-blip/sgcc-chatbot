@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Siêu Thị Cá Cảnh & Phụ Kiện Sài Gòn Cá Cảnh - Shopee Deals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/shop.css?v=5.0">
+</head>
+<body>
+
+  <!-- TOP PROMO BAR -->
+  <div class="top-promo-bar">
+    <i class="fa-solid fa-gift"></i> SĂN VOUCHER SHOPEE GIẢM 50% - TỰ ĐỘNG CẬP NHẬT DEAL MỖI NGÀY!
+  </div>
+
+  <!-- HEADER SHOWCASE -->
+  <header class="shop-header">
+    <div class="container header-container">
+      <a href="index.html" class="shop-brand">
+        <div class="shop-logo">
+          <i class="fa-solid fa-fish-fins"></i>
+        </div>
+        <div class="shop-brand-text">
+          <h1>SÀI GÒN CÁ CẢNH</h1>
+          <span>Supermarket Affiliate Store</span>
+        </div>
+      </a>
+
+      <!-- Search Bar -->
+      <div class="shop-search-bar">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="shop-search-input" placeholder="Tìm sản phẩm, thức ăn, máy bơm, vật liệu lọc...">
+        <button id="btn-clear-search" class="btn-clear hidden"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Wishlist / Cart Button -->
+      <button class="cart-btn" id="btn-open-cart">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span class="cart-count" id="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CATEGORY BANNER / SHELVES NAVIGATION -->
+  <div class="category-bar">
+    <div class="container category-container">
+      <button class="cat-pill active" data-cat="all">
+        <i class="fa-solid fa-border-all"></i> Tất Cả Kệ Hàng
+      </button>
+      <button class="cat-pill" data-cat="thuc-an">
+        <i class="fa-solid fa-bowl-food"></i> Thức Ăn Cá
+      </button>
+      <button class="cat-pill" data-cat="bom-loc">
+        <i class="fa-solid fa-filter"></i> Bơm & Lọc Nước
+      </button>
+      <button class="cat-pill" data-cat="den-led">
+        <i class="fa-solid fa-lightbulb"></i> Đèn Thủy Sinh
+      </button>
+      <button class="cat-pill" data-cat="thuoc-men">
+        <i class="fa-solid fa-vial"></i> Thuốc & Men Vi Sinh
+      </button>
+      <button class="cat-pill" data-cat="phu-kien">
+        <i class="fa-solid fa-cubes"></i> Phụ Kiện Bể Cá
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN SHOWCASE CONTENT -->
+  <main class="shop-main container">
+    
+    <!-- LINK TO MY COLLECTION CANNABIS_SG834 BANNER -->
+    <div class="collection-sync-banner" style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(238, 77, 45, 0.4); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 48px; height: 48px; background: rgba(238, 77, 45, 0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #ee4d2d;">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <div>
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 2px;">BỘ SƯU TẬP SHOPEE KOC: CANNABIS_SG834</h3>
+          <p style="font-size: 0.85rem; color: #94a3b8;">Đã nhập 100+ sản phẩm cá cảnh hot nhất từ danh sách Shopee Affiliate của Bạn.</p>
+        </div>
+      </div>
+      <a href="https://collshp.com/cannabis_sg834?view=storefront" target="_blank" class="btn btn-primary" style="text-decoration: none; padding: 10px 20px; font-size: 0.88rem; white-space: nowrap;">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> MỞ MY COLLECTION SHOPEE
+      </a>
+    </div>
+
+    <!-- FALLBACK ALERT BANNER -->
+    <div id="fallback-alert" class="fallback-alert hidden">
+      <i class="fa-solid fa-circle-info"></i>
+      <div class="fallback-text">
+        <strong>Sản phẩm bạn tìm kiếm đang được cập nhật hoặc vừa hết hàng!</strong>
+        <p>Hệ thống đã tự động lọc các sản phẩm cùng danh mục tốt nhất bên dưới để bạn lựa chọn dễ dàng.</p>
+      </div>
+      <button class="btn-close-alert" id="btn-close-alert"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- PRODUCTS GRID SHOWCASE -->
+    <div class="section-title-box">
+      <h2 id="section-title">🔥 DẤU ẤN HOT - SẢN PHẨM BÁN CHẠY NHẤT</h2>
+      <span class="product-count-badge"><span id="product-count">0</span> Sản Phẩm Sẵn Có</span>
+    </div>
+
+    <div class="product-grid" id="product-grid">
+      <!-- Dynamic Products Cards Rendered Here -->
+    </div>
+
+    <!-- EMPTY SEARCH STATE -->
+    <div id="empty-state" class="empty-state hidden">
+      <i class="fa-solid fa-box-open"></i>
+      <h3>Không Tìm Thấy Sản Phẩm Phù Hợp!</h3>
+      <p>Hãy thử gõ từ khóa khác hoặc bấm chọn lại kệ hàng bên trên.</p>
+      <button class="btn btn-primary" id="btn-reset-filter"><i class="fa-solid fa-rotate-left"></i> Xem Tất Cả Sản Phẩm</button>
+    </div>
+
+  </main>
+
+  <!-- SHOPPING CART / WISHLIST DRAWER -->
+  <div id="cart-drawer-backdrop" class="cart-backdrop hidden"></div>
+  <aside id="cart-drawer" class="cart-drawer">
+    <div class="cart-header">
+      <h3><i class="fa-solid fa-bag-shopping"></i> Giỏ Hàng Mua Sắm Shopee</h3>
+      <button id="btn-close-cart" class="btn-close-cart"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="cart-body" id="cart-items-container">
+      <!-- Cart Items -->
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total-box">
+        <span>Tổng sản phẩm đã chọn:</span>
+        <strong id="cart-total-count">0 món</strong>
+      </div>
+      <button class="btn btn-primary btn-lg" id="btn-checkout-shopee">
+        <i class="fa-solid fa-bolt"></i> ĐẾN SHOPEE MUA TẤT CẢ (NHẬN MÃ)
+      </button>
+    </div>
+  </aside>
+
+  <!-- FULLSCREEN IMAGE LIGHTBOX MODAL -->
+  <div id="image-lightbox-modal" class="cart-backdrop hidden" style="display: flex; align-items: center; justify-content: center; z-index: 99999; backdrop-filter: blur(10px); background: rgba(0,0,0,0.85);">
+    <div style="position: relative; max-width: 90%; max-height: 90%; text-align: center;">
+      <button id="btn-close-lightbox" style="position: absolute; top: -45px; right: 0; background: rgba(255,255,255,0.2); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      <img id="lightbox-img" src="" alt="Zoom Image" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 2px solid rgba(249,115,22,0.5);">
+      <div id="lightbox-title" style="color: #fff; font-weight: 700; margin-top: 15px; font-size: 15px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.3;"></div>
+      <a id="lightbox-buy-btn" href="#" target="_blank" class="btn btn-primary" style="margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 10px 24px; font-size: 14px; border-radius: 30px;"><i class="fa-solid fa-bolt"></i> MUA NAY TRÊN SHOPEE</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="shop-footer">
+    <div class="container">
+      <p>© 2026 Sài Gòn Cá Cảnh - Shopee Affiliate Supermarket Showcase System.</p>
+      <small>Mọi sản phẩm được liên kết trực tiếp với Shopee Việt Nam. Đảm bảo chính hãng & nhận voucher giảm giá.</small>
+    </div>
+  </footer>
+
+  <!-- TOAST -->
+  <div id="shop-toast" class="toast hidden">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="shop-toast-msg">Đã thêm vào giỏ hàng!</span>
+  </div>
+
+  <script>
+    document.write('<script src="js/products-data.js?v=' + Date.now() + '"><\/script>');
+    document.write('<script src="js/shop.js?v=' + Date.now() + '"><\/script>');
+  </script>
+  <!-- Chatbot Sai Gon Ca Canh -->
+  <script>
+  (function(){
+    var s = document.createElement('script');
+    s.src = 'https://chatbot.saigoncacanh.com/widget.js?v=' + Date.now();
+    s.async = true;
+    document.head.appendChild(s);
+  })();
+  </script>
+</body>
+</html>
