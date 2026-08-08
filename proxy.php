@@ -125,6 +125,10 @@ if (!empty($data['contents']) && is_array($data['contents'])) {
     }
 }
 
+// Nhận diện dữ liệu chuẩn hóa từ Edge SLM Client (nếu có)
+$client_clean = $data['cleanQuestion'] ?? '';
+$intent_tag = $data['intentTag'] ?? 'CHUNG';
+
 if (!function_exists('stripAccents')) {
     function stripAccents($str) {
         $unicode = array(
@@ -145,12 +149,13 @@ if (!function_exists('stripAccents')) {
 
 $matching_context = "";
 if (!empty($question)) {
-    $q_stripped = stripAccents(mb_strtolower($question, 'UTF-8'));
+    $target_text = !empty($client_clean) ? $client_clean : $question;
+    $q_stripped = stripAccents(mb_strtolower($target_text, 'UTF-8'));
     $q_words = preg_split('/\s+/', $q_stripped);
     $q_words = array_filter($q_words, function($w) { return mb_strlen($w, 'UTF-8') > 1; });
 
     // ── 0Đ INSTANT MATCHING ENGINE (TẦNG 1 - 0.01s - KHÔNG TỐN CỬA API GEMINI) ──
-    $q_trim = mb_strtolower(trim($question), 'UTF-8');
+    $q_trim = mb_strtolower(trim($target_text), 'UTF-8');
     $q_clean = stripAccents($q_trim);
 
     // 1. Khớp câu chào hỏi phổ thông

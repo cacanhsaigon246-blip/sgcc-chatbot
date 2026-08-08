@@ -337,19 +337,46 @@ function insertQuestion(text) {
   document.getElementById('user-input').focus();
 }
 
+// ─── EDGE AI SANITIZER (TẦNG 1 SLM CLIENT-SIDE) ─────────────
+function sanitizeEdgeQuery(text) {
+  if (!text) return { cleanText: '', intentTag: 'CHUNG' };
+  
+  let clean = text.toLowerCase();
+  
+  // Xóa các từ rác / câu đệm phổ biến trên Client
+  const fillerPhrases = [
+    /shop\s+ơi/gi, /chào\s+shop/gi, /tiệm\s+ơi/gi, /cho\s+em\s+hỏi/gi, /cho\s+mình\s+hỏi/gi,
+    /nhà\s+em\s+dạo\s+này/gi, /dạo\s+này/gi, /giúp\s+em\s+với/gi, /anh\s+ơi/gi, /chị\s+ơi/gi,
+    /cho\s+hỏi/gi, /tư\s+vấn\s+giúp/gi, /với\s+ạ/gi, /\bạ$/gi
+  ];
+  
+  fillerPhrases.forEach(regex => {
+    clean = clean.replace(regex, '');
+  });
+  
+  clean = clean.trim().replace(/\s+/g, ' ');
+  if (!clean) clean = text;
+
+  let intentTag = 'CHUNG';
+  if (/lắc|túm|sình|nấm|lở|loét|đục\s+mắt|cọ|nằm\s+đáy|bỏ\s+ăn|chao|tróc|ruột|bệnh|cứu/i.test(clean)) {
+    intentTag = 'BỆNH_CÁ';
+  } else if (/đục|xanh|mùi|tanh|amoniac|nitrit|ph|thay\s+nước|clo|nước\s+hồ|nước\s+bể/i.test(clean)) {
+    intentTag = 'XỬ_LÝ_NƯỚC';
+  } else if (/bơm|periha|atman|baoyu|sưởi|vật\s+liệu\s+lọc|jmat|sứ\s+lọc|matrix|đèn\s+uv|lọc/i.test(clean)) {
+    intentTag = 'THIẾT_BỊ';
+  } else if (/địa\s+chỉ|ở\s+đâu|mở\s+cửa|bao\s+nhiêu|giá|tiền|bán|shopee|gian\s+hàng/i.test(clean)) {
+    intentTag = 'GIÁ_CẢ_ĐỊA_CHỈ';
+  }
+  
+  return { cleanText: clean, intentTag: intentTag };
+}
+
 // ─── BACKEND CALL VIA PROXY.PHP ───────────────────────────────
 async function callBackendSSE(message) {
   const headers = { 'Content-Type': 'application/json' };
 
-  const systemInstruction = `Bạn là trợ lý AI thân thiện, nhiệt tình của cửa hàng tiệm cá cảnh 'Sài Gòn Cá Cảnh' (địa chỉ 246 Hồ Văn Huê, Phú Nhuận, TP.HCM).
-Xưng hô: Luôn gọi khách hàng là "anh" (hoặc "chị" tùy ngữ cảnh) và tự xưng là "em". 
-Văn phong: Nói chuyện tự nhiên, gần gũi, mộc mạc, nhiệt tình đúng chất anh em chơi cá Sài Gòn. Tuyệt đối KHÔNG trả lời mang tính văn mẫu rập khuôn kiểu: "Dạ về câu hỏi của anh... em xin tư vấn giải pháp nhanh cho anh ạ". Trả lời trực tiếp, hào hứng, tự nhiên như 2 người bạn đam mê cá đang trao đổi với nhau.
-
-Nhiệm vụ trọng tâm:
-1. TRAO ĐỔI VỚI KHÁCH: Trả lời ngắn gọn, đúng trọng tâm vấn đề bệnh cá, phụ kiện, thức ăn, chăm sóc nước.
-2. GỢI Ý SẢN PHẨM KHÉO LÉO: Đưa ra thông tin sản phẩm cụ thể từ danh sách POS (có tên sản phẩm, giá bán, tình trạng còn hàng). 
-3. LINK GIAN HÀNG SẢN PHẨM: Đưa ra link xem và mua sản phẩm trực tiếp từ hệ thống gian hàng chính thức: https://shop.saigoncacanh.com bằng định dạng [Tên sản phẩm](https://shop.saigoncacanh.com).
-4. KHÔNG nhắc tới nút bấm hoặc liên hệ Zalo nữa.`;
+  // Edge AI Client Sanitizer (Tầng 1 SLM)
+  const edgeSanitized = sanitizeEdgeQuery(message);
 
   // Chuẩn bị payload kèm lịch sử trò chuyện
   const historyParts = state.chatHistory.map(h => ({
@@ -365,7 +392,11 @@ Nhiệm vụ trọng tâm:
   const res = await fetch(`${CONFIG.API_BASE_URL}/proxy.php`, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify({ contents: historyParts })
+    body: JSON.stringify({ 
+      contents: historyParts,
+      cleanQuestion: edgeSanitized.cleanText,
+      intentTag: edgeSanitized.intentTag
+    })
   });
 
   if (!res.ok) {
