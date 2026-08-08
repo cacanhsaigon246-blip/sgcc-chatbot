@@ -530,7 +530,6 @@ if (!empty($question)) {
                 }
             }
         }
-}
 
 // Xây dựng System Prompt cứng mang phong cách thợ cá Sài Gòn lâu năm, tư vấn tận tâm và am hiểu sâu sắc
 $system_prompt = "Bạn là người thợ cá lâu năm giàu kinh nghiệm của tiệm 'Sài Gòn Cá Cảnh' tại 246 Hồ Văn Huê, Phường Đức Nhuận (P.9 cũ), Quận Phú Nhuận, TP.HCM.
