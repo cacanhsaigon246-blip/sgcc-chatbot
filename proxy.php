@@ -549,6 +549,37 @@ if ($is_bearer) {
     ];
 }
 
+// ── TẦNG 2: CLOUD MICRO SLM (CLOUDFLARE WORKERS AI FREE TIER 300MS) ──
+$cf_worker_url = 'https://sgcc-slm.cacanhsaigon246.workers.dev';
+if (!empty($cf_worker_url) && !empty($question)) {
+    $cf_ch = curl_init($cf_worker_url);
+    curl_setopt_array($cf_ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode(['question' => $question]),
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_TIMEOUT        => 3
+    ]);
+    $cf_res = curl_exec($cf_ch);
+    $cf_code = curl_getinfo($cf_ch, CURLINFO_HTTP_CODE);
+    curl_close($cf_ch);
+    if ($cf_code === 200 && $cf_res) {
+        $cf_data = json_decode($cf_res, true);
+        if (!empty($cf_data['reply'])) {
+            $reply = $cf_data['reply'];
+            if (!empty($matching_context)) {
+                $reply .= "\n\n" . $matching_context;
+            }
+            echo json_encode([
+                'candidates' => [
+                    ['content' => ['parts' => [['text' => $reply]]]]
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+    }
+}
+
 $ch = curl_init($gemini_url);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
