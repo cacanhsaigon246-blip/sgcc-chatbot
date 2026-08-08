@@ -454,27 +454,55 @@ if (!empty($question)) {
             }
         }
 
-        // 2. Tham khảo thêm giá POS thực tế tại tiệm (nếu có)
-        $pos_file = __DIR__ . '/pos_products.json';
-        if (file_exists($pos_file)) {
-            $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
-            $matched_pos = [];
-            foreach ($pos_products as $p) {
-                $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
-                foreach ($q_words as $w) {
-                    if (strpos($p_name_stripped, $w) !== false) {
-                        if (intval($p['qty'] ?? 0) > 0) {
-                            $matched_pos[] = $p;
+        // 2. LẤY GIÁ BÁN & TỒN KHO THỰC TẾ TRỰC TIẾP TỪ DATABASE POS (pos.saigoncacanh.com)
+        $matched_pos = [];
+        try {
+            $pos_pdo = new PDO("mysql:host=127.0.0.1;dbname=u972437838_pos;charset=utf8mb4", "u972437838_pos_user", "Cannabis041188", [
+                PDO::ATTR_TIMEOUT => 1,
+                PDO::ERRMODE => PDO::ERRMODE_SILENT
+            ]);
+            if (!empty($q_words)) {
+                $pos_stmt = $pos_pdo->query("SELECT `name`, `quantity`, `sell_price` FROM `inventory` ORDER BY `quantity` DESC LIMIT 150");
+                if ($pos_stmt) {
+                    $pos_rows = $pos_stmt->fetchAll(PDO::FETCH_ASSOC);
+                    foreach ($pos_rows as $p) {
+                        $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
+                        foreach ($q_words as $w) {
+                            if (mb_strlen($w, 'UTF-8') >= 2 && strpos($p_name_stripped, $w) !== false) {
+                                $matched_pos[] = [
+                                    'name' => $p['name'],
+                                    'qty' => intval($p['quantity'] ?? 0),
+                                    'sellPrice' => floatval($p['sell_price'] ?? 0)
+                                ];
+                                break;
+                            }
                         }
-                        break;
                     }
                 }
             }
-            if (!empty($matched_pos)) {
-                $matching_context .= "\n[GIÁ THAM KHẢO TRỰC TIẾP TẠI TIỆM 246 HỒ VĂN HUÊ (POS)]:\n";
-                foreach (array_slice($matched_pos, 0, 5) as $p) {
-                    $matching_context .= "- " . $p['name'] . " | Giá tại cửa hàng: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ\n";
+        } catch (Exception $e) {
+            // Fallback đọc file pos_products.json nếu MySQL gián đoạn
+            $pos_file = __DIR__ . '/pos_products.json';
+            if (file_exists($pos_file)) {
+                $pos_products = json_decode(file_get_contents($pos_file), true) ?: [];
+                foreach ($pos_products as $p) {
+                    $p_name_stripped = stripAccents(mb_strtolower($p['name'] ?? '', 'UTF-8'));
+                    foreach ($q_words as $w) {
+                        if (mb_strlen($w, 'UTF-8') >= 2 && strpos($p_name_stripped, $w) !== false) {
+                            $matched_pos[] = $p;
+                            break;
+                        }
+                    }
                 }
+            }
+        }
+
+        if (!empty($matched_pos)) {
+            $matching_context .= "\n[GIÁ BÁN & TỒN KHO THỰC TẾ TỪ CSDL POS.SAIGONCACANH.COM (TIỆM 246 HỒ VĂN HUÊ)]:\n";
+            $matching_context .= "LƯU Ý: Đây là con số thực tế 100% đang có tại tiệm. Bạn BẮT BUỘC phải ưu tiên báo giá và số lượng tồn kho này cho khách hàng!\n";
+            foreach (array_slice($matched_pos, 0, 6) as $p) {
+                $stock_status = intval($p['qty'] ?? 0) > 0 ? ("Còn " . intval($p['qty']) . " món tại tiệm") : "Tạm hết hàng tại tiệm";
+                $matching_context .= "- " . $p['name'] . " | Giá POS tiệm: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ (" . $stock_status . ")\n";
             }
         }
 
