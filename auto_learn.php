@@ -35,8 +35,22 @@ if (!empty($unanswered)) {
                 }
             }
             if (!$exists) {
-                // Tự động tổng hợp câu trả lời thông minh từ câu trả lời của AI hoặc mặc định
-                $auto_ans = is_array($u) && !empty($u['answer']) ? $u['answer'] : "Dạ tiệm Sài Gòn Cá Cảnh (246 Hồ Văn Huê, P. Đức Nhuận, Phú Nhuận) xin ghi nhận thắc mắc của anh/chị ạ!\n- Sản phẩm & Dịch vụ: Mời anh/chị xem chi tiết trên [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) ạ!\n- Hỗ trợ trực tiếp: Anh/chị ghé xem tiệm từ 8h00 - 21h00 các ngày trong tuần nhé ạ!";
+                $raw_ans = is_array($u) && !empty($u['answer']) ? $u['answer'] : '';
+                $q_lower = mb_strtolower($q_text, 'UTF-8');
+                $ans_lower = mb_strtolower($raw_ans, 'UTF-8');
+
+                // Kiểm tra sự trùng khớp ngữ nghĩa cơ bản (chống gán nhầm câu trả lời đục nước cho câu hỏi giá cả)
+                $is_invalid = false;
+                if ((strpos($q_lower, 'giá') !== false || strpos($q_lower, 'tiền') !== false || strpos($q_lower, 'bán') !== false) && 
+                    (strpos($ans_lower, 'đục trắng') !== false || strpos($ans_lower, 'vo gạo') !== false || strpos($ans_lower, 'sình bụng') !== false)) {
+                    $is_invalid = true;
+                }
+
+                if ($is_invalid || empty($raw_ans)) {
+                    $auto_ans = "Dạ tiệm Sài Gòn Cá Cảnh (246 Hồ Văn Huê, P. Đức Nhuận, Phú Nhuận) xin ghi nhận thắc mắc của anh/chị ạ!\n- Giá cả & Dịch vụ: Mời anh/chị xem chi tiết trên gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) ạ!\n- Tư vấn trực tiếp: Anh/chị ghé xem tiệm từ 8h00 - 21h00 các ngày trong tuần nhé ạ!";
+                } else {
+                    $auto_ans = $raw_ans;
+                }
                 
                 array_unshift($qa_list, [
                     'question' => $q_text,
