@@ -15,6 +15,16 @@ $temp_logs_file = __DIR__ . '/temp_logs.json';
 $qa_list = file_exists($qa_file) ? json_decode(file_get_contents($qa_file), true) : [];
 if (!is_array($qa_list)) $qa_list = [];
 
+// Tự động quét dọn và loại bỏ các câu trả lời bị dính lỗi "Hệ thống bận"
+$cleaned_qa_list = [];
+foreach ($qa_list as $qa) {
+    $ans = mb_strtolower($qa['answer'] ?? '', 'UTF-8');
+    if (strpos($ans, 'hệ thống bận') === false && strpos($ans, 'bận một chút') === false) {
+        $cleaned_qa_list[] = $qa;
+    }
+}
+$qa_list = $cleaned_qa_list;
+
 $unanswered = file_exists($unanswered_file) ? json_decode(file_get_contents($unanswered_file), true) : [];
 if (!is_array($unanswered)) $unanswered = [];
 

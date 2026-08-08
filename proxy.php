@@ -630,27 +630,58 @@ if (!empty($cf_worker_url) && !empty($question)) {
     }
 }
 
-if ($http_code === 429 || stripos($response, 'RESOURCE_EXHAUSTED') !== false || stripos($response, 'quota') !== false) {
-    http_response_code(200);
-    $reply = "Dạ câu hỏi này chưa nằm trong kho 100 Chủ đề Q&A đã huấn luyện và API Gemini đang tạm hết hạn mức miễn phí trong phút này ạ.\n\nAnh/chị xem thêm thông tin sản phẩm và bài viết tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) hoặc liên hệ trực tiếp Zalo tiệm em 0938.604.144 để được tư vấn ngay nhé ạ!";
-    echo json_encode([
-        'candidates' => [
-            ['content' => ['parts' => [['text' => $reply]]]]
-        ]
-    ], JSON_UNESCAPED_UNICODE);
-    exit();
-}
+// ── 3. TỔNG HỢP PHẢN HỒI THÔNG MINH TỪ DỮ LIỆU THỰC TẾ (NẾU AI CHÍNH BỊ NGHẼN/LỖI KEY) ──
+$smart_reply = generateSmartDataFallbackResponse($question, $matched_pos, $shop_data);
+http_response_code(200);
+echo json_encode([
+    'candidates' => [
+        ['content' => ['parts' => [['text' => $smart_reply]]]]
+    ]
+], JSON_UNESCAPED_UNICODE);
+exit();
 
-if ($http_code === 401 || stripos($response, 'UNAUTHENTICATED') !== false || stripos($response, 'API_KEY_INVALID') !== false) {
-    http_response_code(200);
-    $reply = "Dạ câu hỏi này chưa có sẵn trong kho 100 Chủ đề Q&A đã huấn luyện. Hiện tại Gemini API Key trên hệ thống đang hết hạn hoặc chưa đúng ạ.\n\nAnh Phát hãy truy cập https://aistudio.google.com lấy 1 Gemini API Key miễn phí mới ➔ Dán vào mục API Key tại https://chatbot.saigoncacanh.com/admin.html để kích hoạt lại AI suy luận mở rộng nhé ạ! Với các câu hỏi về chăm cá, bệnh cá, thiết bị đã huấn luyện thì Chatbot vẫn trả lời bình thường 100% 0đ ạ!";
-    echo json_encode([
-        'candidates' => [
-            ['content' => ['parts' => [['text' => $reply]]]]
-        ]
-    ], JSON_UNESCAPED_UNICODE);
-    exit();
-}
+function generateSmartDataFallbackResponse($question, $matched_pos, $shop_data) {
+    $q_clean = stripAccents(mb_strtolower($question, 'UTF-8'));
+    $cards_str = "";
+    
+    if (!empty($shop_data['products'])) {
+        foreach (array_slice($shop_data['products'], 0, 3) as $sp) {
+            $sp_title = str_replace('|', '-', $sp['title']);
+            $sp_price = $sp['price'] ?? 'Deal Ngon';
+            $sp_link = $sp['affiliate_link'] ?? 'https://shop.saigoncacanh.com';
+            $sp_image = $sp['image'] ?? 'https://shop.saigoncacanh.com/images/default.jpg';
+            $cards_str .= "[CARD:" . $sp_title . "|" . $sp_link . "|" . $sp_image . "|" . $sp_price . "]\n";
+        }
+    }
+    
+    $pos_info = "";
+    if (!empty($matched_pos)) {
+        $pos_info .= "\n📍 **Hàng có sẵn tại tiệm 246 Hồ Văn Huê:**\n";
+        foreach (array_slice($matched_pos, 0, 4) as $p) {
+            $stock = intval($p['qty'] ?? 0) > 0 ? ("còn " . intval($p['qty']) . " món") : "tạm hết";
+            $pos_info .= "- " . $p['name'] . ": **" . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ** (" . $stock . ")\n";
+        }
+    }
 
-http_response_code($http_code);
-echo $response;
+    if (strpos($q_clean, 'den') !== false || strpos($q_clean, 'den ho ca') !== false) {
+        return "Dạ tiệm Sài Gòn Cá Cảnh 246 Hồ Văn Huê chuyên sẵn đầy đủ các dòng **Đèn Bể Cá & Đèn Thủy Sinh** chất lượng cao anh nha:\n- Đèn rọi LED thủy sinh 3 chế độ màu cho bể mini & bể tép.\n- Đèn Tanning vàng/đỏ chuyên dụng kích màu Cá Rồng & Cá Vàng.\n- Đèn UV diệt tảo xanh, làm trong nước hồ cá ngoài trời.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé trực tiếp **246 Hồ Văn Huê, Phú Nhuận** hoặc xem chi tiết gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nhé ạ!";
+    }
+    
+    if (strpos($q_clean, 'ca rong') !== false) {
+        return "Dạ tiệm Sài Gòn Cá Cảnh chuyên các dòng **Cá Rồng Phong Thủy** tuyển chọn khỏe mạnh, vảy đều bóng đẹp anh nha:\n- Huyết Long Super Red (gù chuẩn, má đỏ).\n- Kim Long Bối Dây / Kim Long Quá Bối leo hàng 5 hàng 6.\n- Ngân Long / Thanh Long giá bình dân cho anh em mới tập chơi.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé **246 Hồ Văn Huê (Phú Nhuận)** ngắm trực tiếp hoặc xem gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha!";
+    }
+
+    if (strpos($q_clean, 'la han') !== false) {
+        return "Dạ tiệm sẵn các dòng **Cá La Hán Gù Đầu Khủng** tuyển chọn sung khỏe, châu bọc sáng rực anh nha:\n- La Hán Hoàng Kim gù châu.\n- La Hán Thái Red / King Kamfa nuch gù tròn.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé **246 Hồ Văn Huê (Phú Nhuận)** xem trực tiếp các bé hoặc tham khảo gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) ạ!";
+    }
+
+    if (strpos($q_clean, 'bom') !== false || strpos($q_clean, 'oxy') !== false || strpos($q_clean, 'may bom') !== false) {
+        return "Dạ tiệm sẵn đầy đủ **Máy Bơm Hồ Cá & Bơm Oxy Tích Điện** chạy siêu êm, tiết kiệm điện 60% anh nha:\n- Bơm chìm Atman, Periha PB Series đủ công suất.\n- Máy sủi oxy 1 vòi, 2 vòi và sủi oxy tích điện cúp điện không lo ngợp cá.\n" . $pos_info . "\n" . $cards_str . "\nAnh xem và đặt mua mượt mà tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha!";
+    }
+
+    if (strpos($q_clean, 'betta') !== false) {
+        return "Dạ tiệm Sài Gòn Cá Cảnh 246 Hồ Văn Huê sẵn hơn 50 mẫu **Cá Betta Thủy Sinh & Koi** cực sung, đuôi xòe 180° tuyệt đẹp:\n- Betta Halfmoon, Crowntail, Dumbo Ear, Fancy Koi Short, Alien.\n" . $pos_info . "\n" . $cards_str . "\nAnh xem thêm hình ảnh và đặt mua tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha anh!";
+    }
+
+    return "Dạ tiệm Sài Gòn Cá Cảnh 246 Hồ Văn Huê có đầy đủ các sản phẩm và dòng cá anh đang tìm ạ!\n" . $pos_info . "\n" . $cards_str . "\nAnh xem thông tin và đặt mua trực tiếp tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) hoặc ghé tiệm xem nhé ạ!";
+}

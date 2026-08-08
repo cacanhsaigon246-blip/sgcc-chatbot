@@ -147,7 +147,10 @@ $unanswered = file_exists($unanswered_file) ? json_decode(file_get_contents($una
 if (!is_array($unanswered)) $unanswered = [];
 
 $clean_q = mb_strtolower(trim($question), 'UTF-8');
-if (mb_strlen($clean_q, 'UTF-8') >= 3) {
+$ans_lower = mb_strtolower($answer, 'UTF-8');
+$is_error_ans = (strpos($ans_lower, 'hệ thống bận') !== false || strpos($ans_lower, 'bận một chút') !== false);
+
+if (mb_strlen($clean_q, 'UTF-8') >= 3 && !$is_error_ans) {
     $found = false;
     foreach ($unanswered as &$item) {
         $q_item = is_string($item) ? mb_strtolower(trim($item), 'UTF-8') : (isset($item['question']) ? mb_strtolower(trim($item['question']), 'UTF-8') : '');
