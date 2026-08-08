@@ -654,17 +654,26 @@ function generateSmartDataFallbackResponse($question, $matched_pos, $shop_data) 
     $has_pos_stock = false;
     $pos_info = "";
     if (!empty($matched_pos)) {
-    if (strpos($q_clean, 'la han') !== false) {
-        return "Dạ tiệm sẵn các dòng **Cá La Hán Gù Đầu Khủng** tuyển chọn sung khỏe, châu bọc sáng rực anh nha:\n- La Hán Hoàng Kim gù châu.\n- La Hán Thái Red / King Kamfa nuch gù tròn.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé **246 Hồ Văn Huê (Phú Nhuận)** xem trực tiếp các bé hoặc tham khảo gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) ạ!";
+        foreach ($matched_pos as $p) {
+            if (intval($p['qty'] ?? 0) > 0) {
+                $has_pos_stock = true;
+                break;
+            }
+        }
+        if ($has_pos_stock) {
+            $pos_info .= "\n📍 **ĐANG CÓ SẴN TẠI TIỆM 246 HỒ VĂN HUÊ:**\n";
+            foreach (array_slice($matched_pos, 0, 4) as $p) {
+                if (intval($p['qty'] ?? 0) > 0) {
+                    $pos_info .= "- " . $p['name'] . ": **" . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ** (Còn " . intval($p['qty']) . " món tại tiệm)\n";
+                }
+            }
+        }
     }
 
-    if (strpos($q_clean, 'bom') !== false || strpos($q_clean, 'oxy') !== false || strpos($q_clean, 'may bom') !== false) {
-        return "Dạ tiệm sẵn đầy đủ **Máy Bơm Hồ Cá & Bơm Oxy Tích Điện** chạy siêu êm, tiết kiệm điện 60% anh nha:\n- Bơm chìm Atman, Periha PB Series đủ công suất.\n- Máy sủi oxy 1 vòi, 2 vòi và sủi oxy tích điện cúp điện không lo ngợp cá.\n" . $pos_info . "\n" . $cards_str . "\nAnh xem và đặt mua mượt mà tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha!";
+    if ($has_pos_stock) {
+        return "Dạ sản phẩm anh/chị đang tìm **ĐANG CÓ SẴN TẠI TIỆM 246 HỒ VĂN HUÊ (Phú Nhuận)** anh nha!\n" . $pos_info . "\nAnh ghé trực tiếp tiệm từ 8:00 - 21:00 các ngày trong tuần để ngắm và lấy hàng ngay ạ hoặc xem thêm tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha!";
     }
 
-    if (strpos($q_clean, 'betta') !== false) {
-        return "Dạ tiệm Sài Gòn Cá Cảnh 246 Hồ Văn Huê sẵn hơn 50 mẫu **Cá Betta Thủy Sinh & Koi** cực sung, đuôi xòe 180° tuyệt đẹp:\n- Betta Halfmoon, Crowntail, Dumbo Ear, Fancy Koi Short, Alien.\n" . $pos_info . "\n" . $cards_str . "\nAnh xem thêm hình ảnh và đặt mua tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha anh!";
-    }
-
-    return "Dạ tiệm Sài Gòn Cá Cảnh 246 Hồ Văn Huê có đầy đủ các sản phẩm và dòng cá anh đang tìm ạ!\n" . $pos_info . "\n" . $cards_str . "\nAnh xem thông tin và đặt mua trực tiếp tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) hoặc ghé tiệm xem nhé ạ!";
+    // Nếu tiệm không có sẵn -> Đẩy sang gian hàng online shop.saigoncacanh.com
+    return "Dạ tại tiệm 246 Hồ Văn Huê hiện tạm hết sẵn mẫu này, nhưng sản phẩm **ĐANG CÓ TRÊN GIAN HÀNG ONLINE SHOP.SAIGONCACANH.COM** anh nha!\n\nAnh/chị bấm vào thẻ bên dưới để hướng dẫn đặt hàng online giao tận nhà mượt mà nhé ạ:\n\n" . $cards_str . "\nHoặc xem thêm toàn bộ gian hàng tại [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) ạ!";
 }
