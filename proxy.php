@@ -499,7 +499,9 @@ if (!empty($question)) {
 
         if (!empty($matched_pos)) {
             $matching_context .= "\n[GIÁ BÁN & TỒN KHO THỰC TẾ TỪ CSDL POS.SAIGONCACANH.COM (TIỆM 246 HỒ VĂN HUÊ)]:\n";
-            $matching_context .= "LƯU Ý: Đây là con số thực tế 100% đang có tại tiệm. Bạn BẮT BUỘC phải ưu tiên báo giá và số lượng tồn kho này cho khách hàng!\n";
+            $matching_context .= "QUY TẮC KIỂM TRA HÀNG HÓA KÉP (BẮT BUỘC THỰC HIỆN DƯỚI ĐÂY):\n";
+            $matching_context .= "1. NẾU SẢN PHẨM CÓ SẴN TẠI POS & TỒN KHO > 0: Bạn BẮT BUỘC thông báo rõ cho khách: 'Dạ sản phẩm này ĐANG CÓ SẴN TẠI TIỆM 246 HỒ VĂN HUÊ anh nha!' + Báo đúng giá POS & Tồn kho tại tiệm.\n";
+            $matching_context .= "2. NẾU KHÔNG CÓ TRONG POS HOẶC TẠM HẾT TẠI TIỆM (TỒN KHO = 0): Bạn BẮT BUỘC thông báo: 'Dạ tại tiệm 246 Hồ Văn Huê hiện tạm hết sẵn, nhưng ĐANG CÓ TRÊN GIAN HÀNG ONLINE anh nha!' + Đính kèm thẻ [CARD:...] từ phần [DANH SÁCH SẢN PHẨM TỪ GIAN HÀNG SHOPEE] bên dưới để hướng dẫn khách đặt hàng online giao tận nhà mượt mà!\n\n";
             foreach (array_slice($matched_pos, 0, 6) as $p) {
                 $stock_status = intval($p['qty'] ?? 0) > 0 ? ("Còn " . intval($p['qty']) . " món tại tiệm") : "Tạm hết hàng tại tiệm";
                 $matching_context .= "- " . $p['name'] . " | Giá POS tiệm: " . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ (" . $stock_status . ")\n";
@@ -533,22 +535,18 @@ if (!empty($question)) {
 // Xây dựng System Prompt cứng mang phong cách thợ cá Sài Gòn lâu năm, tư vấn tận tâm và am hiểu sâu sắc
 $system_prompt = "Bạn là người thợ cá lâu năm giàu kinh nghiệm của tiệm 'Sài Gòn Cá Cảnh' tại 246 Hồ Văn Huê, Phường Đức Nhuận (P.9 cũ), Quận Phú Nhuận, TP.HCM.
 
+[QUY TẮC KIỂM TRA HÀNG HÓA KÉP (POS ➔ ONLINE SHOP)]:
+- BƯỚC 1 - KIỂM TRA KHO TIỆM (POS.SAIGONCACANH.COM): Nếu sản phẩm có trong danh sách POS và còn tồn kho (>0), hãy thông báo: 'Dạ sản phẩm này ĐANG CÓ SẴN TẠI TIỆM 246 HỒ VĂN HUÊ anh/chị nha!' + Báo giá niêm yết POS & Tồn kho tại tiệm.
+- BƯỚC 2 - CHUYỂN HƯỚNG SANG GIAN HÀNG ONLINE (SHOP.SAIGONCACANH.COM): Nếu tiệm hết hàng sẵn hoặc sản phẩm chưa có trong POS, hãy thông báo: 'Dạ tại tiệm 246 Hồ Văn Huê hiện tạm hết sẵn, nhưng ĐANG CÓ TRÊN GIAN HÀNG ONLINE anh/chị nha!' + Đính kèm thẻ [CARD:...] từ danh sách gian hàng bên dưới để hướng dẫn khách bấm mua và đặt hàng online dễ dàng!
+
 [PHONG CÁCH TƯ DUY & VĂN PHONG THỢ CÁ SÀI GÒN]:
 - ĐÓNG VAI NGUỜI THỢ CÁ AM HIỂU VÀ TẬN TÂM: Bạn có hơn 15 năm kinh nghiệm nuôi cá rồng, cá koi, cá betta, cá vàng, tép màu và xử lý mọi loại bệnh cá & thiết bị hồ lọc TPHCM.
 - XƯNG HÔ THÂN THIỆN: Gọi khách là 'anh' hoặc 'chị', tự xưng là 'em'. Văn phong tự nhiên, ấm áp, chân thành đúng chất anh em chơi cá Sài Gòn.
-- TƯ DUY PHÂN TÍCH SÂU SẮC: Khi khách hỏi bất kỳ câu hỏi nào (bệnh cá, máy bơm, sưởi, nước đục...), hãy phân tích RÕ NGUYÊN NHÂN CỐT LÕI trước, sau đó đưa ra GIẢI PHÁP THỰC TẾ THEO BƯỚC (1, 2, 3) để khách áp dụng thành công ngay.
-- TRÌNH BÀY ĐẸP MẮT & SẮC NÉT: Phải xuống dòng (newline) rõ ràng giữa các phần để dễ đọc trên điện thoại.
-- TUYỆT ĐỐI KHÔNG DÙNG VĂN MẪU RẬP KHUÔN kiểu robot: Tránh các câu khô khan như 'Dạ về câu hỏi của anh... em xin tư vấn...'. Trả lời thẳng thắn, hào hứng như hai thợ cá đang ngồi uống trà trao đổi kinh nghiệm tại tiệm 246 Hồ Văn Huê.
-- NẾU CÓ THẺ SẢN PHẨM [CARD:...]: Hãy lồng ghép tự nhiên các thẻ sản phẩm [CARD:...] vào cuối bài tư vấn để khách bấm xem và mua mượt mà.
-
-[BẢO VỆ PHÁP LÝ & AN TOÀN]:
-- Dùng từ ngữ khiêm tốn, an toàn: 'bên em thấy dùng rất ổn', 'được nhiều anh em chơi cá tin dùng', 'đã lọc kỹ chất lượng'.
-- Hàng hóa giao nhận/bảo hành online: Giới thiệu link gian hàng shop.saigoncacanh.com để khách xem giá và đặt mua dễ dàng.
+- TRÌNH BÀY ĐẸP MẮT & SẮC NÉT: Phải xuống dòng rõ ràng giữa các phần để dễ đọc trên điện thoại.
 
 [QUY TẮC HIỂN THỊ SẢN PHẨM & CẤM BỊA ĐẶT LINK]:
-- BẮT BUỘC DÙNG [CARD]: Để hiển thị một sản phẩm, TUYỆT ĐỐI KHÔNG dùng định dạng Markdown [Tên](link). Bạn CHỈ ĐƯỢC PHÉP copy nguyên văn dòng [CARD:...] từ phần [DANH SÁCH SẢN PHẨM TỪ GIAN HÀNG SHOPEE] bên dưới.
-- KHÔNG BỊA ĐẶT LINK SẢN PHẨM: Nếu khách hỏi một sản phẩm KHÔNG CÓ trong [DANH SÁCH SẢN PHẨM TỪ GIAN HÀNG SHOPEE], BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ BỊA RA LINK HAY TỰ BỊA RA THẺ [CARD]. Hãy thành thật nói rằng trên gian hàng online tạm hết hoặc chưa cập nhật, và mời khách ghé trực tiếp tiệm hoặc xem các sản phẩm khác.
-- LINK GIAN HÀNG CHÍNH THỨC: Khi mời khách xem thêm toàn bộ gian hàng (không phải một sản phẩm cụ thể), hãy dùng định dạng Markdown: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com).
+- BẮT BUỘC DÙNG [CARD]: Để hiển thị một sản phẩm, TUYỆT ĐỐI KHÔNG dùng định dạng Markdown [Tên](link). Bạn CHỈ ĐƯỢC PHÉP copy nguyên văn dòng [CARD:...] tương ứng.
+- LINK GIAN HÀNG CHÍNH THỨC: Khi mời khách xem thêm toàn bộ gian hàng, hãy dùng định dạng Markdown: [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com).
 
 [NGỮ CẢNH HỆ THỐNG & KHO TRI THỨC CHUẨN CỦA TIỆM]:
 " . $location_instruction . "
@@ -556,9 +554,8 @@ $system_prompt = "Bạn là người thợ cá lâu năm giàu kinh nghiệm c�
 " . $matching_context . "
 
 [BẢN CHẤT TƯ DUY & TẠO ĐÁP ÁN THÔNG MINH BIẾN HÓA]:
-1. Bạn không phải là bot cứng nhắc! Hãy dùng trí tuệ tự nhiên của người thợ cá lâu năm tại Sài Gòn Cá Cảnh để phân tích nhu cầu thực sự của khách.
-2. Trả lời thẳng vào giải pháp, chia các bước rõ ràng (1., 2., 3.), kèm mẹo chăm cá mộc mạc và chân thành nhất.
-3. Nếu có sản phẩm phù hợp từ danh sách bên dưới, hãy đính kèm thẻ [CARD:...] để khách tiện xem và đặt mua!";
+1. Trả lời thẳng vào giải pháp, chia các bước rõ ràng (1., 2., 3.), kèm mẹo chăm cá mộc mạc và chân thành nhất.
+2. Áp dụng chuẩn quy tắc: Có tại tiệm thì báo POS, hết tại tiệm thì đính kèm thẻ [CARD:...] hướng dẫn khách đặt trên [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com)!";
 
 // ── CALL GEMINI API (XỬ LÝ ĐÚNG ĐỊNH DẠNG API KEY GOOGLE AI STUDIO) ───────────────────────────────────────────
 $is_bearer = (strpos($api_key, 'ya29.') === 0);
@@ -630,7 +627,7 @@ if (!empty($cf_worker_url) && !empty($question)) {
     }
 }
 
-// ── 3. TỔNG HỢP PHẢN HỒI THÔNG MINH TỪ DỮ LIỆU THỰC TẾ (NẾU AI CHÍNH BỊ NGHẼN/LỖI KEY) ──
+// ── 3. TỔNG HỢP PHẢN HỒI THÔNG MINH TỪ DỮ LIỆU THỰC TẾ (KHI AI NGHỄN) ──
 $smart_reply = generateSmartDataFallbackResponse($question, $matched_pos, $shop_data);
 http_response_code(200);
 echo json_encode([
@@ -654,23 +651,10 @@ function generateSmartDataFallbackResponse($question, $matched_pos, $shop_data) 
         }
     }
     
+    // Phân luồng: Nếu có hàng POS sẵn tại tiệm -> báo POS. Nếu không có tại tiệm -> hướng dẫn qua Online Shop
+    $has_pos_stock = false;
     $pos_info = "";
     if (!empty($matched_pos)) {
-        $pos_info .= "\n📍 **Hàng có sẵn tại tiệm 246 Hồ Văn Huê:**\n";
-        foreach (array_slice($matched_pos, 0, 4) as $p) {
-            $stock = intval($p['qty'] ?? 0) > 0 ? ("còn " . intval($p['qty']) . " món") : "tạm hết";
-            $pos_info .= "- " . $p['name'] . ": **" . number_format(intval($p['sellPrice'] ?? 0), 0, ',', '.') . "đ** (" . $stock . ")\n";
-        }
-    }
-
-    if (strpos($q_clean, 'den') !== false || strpos($q_clean, 'den ho ca') !== false) {
-        return "Dạ tiệm Sài Gòn Cá Cảnh 246 Hồ Văn Huê chuyên sẵn đầy đủ các dòng **Đèn Bể Cá & Đèn Thủy Sinh** chất lượng cao anh nha:\n- Đèn rọi LED thủy sinh 3 chế độ màu cho bể mini & bể tép.\n- Đèn Tanning vàng/đỏ chuyên dụng kích màu Cá Rồng & Cá Vàng.\n- Đèn UV diệt tảo xanh, làm trong nước hồ cá ngoài trời.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé trực tiếp **246 Hồ Văn Huê, Phú Nhuận** hoặc xem chi tiết gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nhé ạ!";
-    }
-    
-    if (strpos($q_clean, 'ca rong') !== false) {
-        return "Dạ tiệm Sài Gòn Cá Cảnh chuyên các dòng **Cá Rồng Phong Thủy** tuyển chọn khỏe mạnh, vảy đều bóng đẹp anh nha:\n- Huyết Long Super Red (gù chuẩn, má đỏ).\n- Kim Long Bối Dây / Kim Long Quá Bối leo hàng 5 hàng 6.\n- Ngân Long / Thanh Long giá bình dân cho anh em mới tập chơi.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé **246 Hồ Văn Huê (Phú Nhuận)** ngắm trực tiếp hoặc xem gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) nha!";
-    }
-
     if (strpos($q_clean, 'la han') !== false) {
         return "Dạ tiệm sẵn các dòng **Cá La Hán Gù Đầu Khủng** tuyển chọn sung khỏe, châu bọc sáng rực anh nha:\n- La Hán Hoàng Kim gù châu.\n- La Hán Thái Red / King Kamfa nuch gù tròn.\n" . $pos_info . "\n" . $cards_str . "\nAnh ghé **246 Hồ Văn Huê (Phú Nhuận)** xem trực tiếp các bé hoặc tham khảo gian hàng [Siêu Thị Sài Gòn Cá Cảnh](https://shop.saigoncacanh.com) ạ!";
     }
