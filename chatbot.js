@@ -535,24 +535,21 @@ function formatBotText(text) {
       image = image.replace(/\s+/g, '').trim();
       title = title.trim();
       price = price.trim();
-      return `<div class="sgcc-card-item" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin:8px 0;border:1px solid #eee;display:flex;flex-direction:column;flex:0 0 210px;max-width:210px;scroll-snap-align:start;">
-          <a href="${link}" target="_blank" style="display:block;text-decoration:none;color:inherit;">
-            <div style="background:#f8f9fa;padding:8px;text-align:center;border-bottom:1px solid #eee;">
-              <img src="${image}" onerror="this.onerror=null;this.src='https://saigoncacanh.com/wp-content/uploads/2023/11/logo-sai-gon-ca-canh-e1780211444314.png';this.style.maxHeight='60px';" style="max-height:100px;max-width:100%;object-fit:contain;margin:0 auto;display:block;" alt="${title}">
+      return `<div class="sgcc-card-horizontal" style="background:rgba(15,23,42,0.75);border:1px solid rgba(0,200,255,0.3);border-radius:12px;padding:8px 10px;margin:8px 0;box-shadow:0 4px 14px rgba(0,0,0,0.3);width:100%;box-sizing:border-box;">
+          <a href="${link}" target="_blank" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;width:100%;">
+            <div style="width:60px;height:60px;min-width:60px;border-radius:8px;overflow:hidden;background:#ffffff;display:flex;align-items:center;justify-content:center;padding:3px;border:1px solid rgba(255,255,255,0.3);">
+              <img src="${image}" onerror="this.onerror=null;this.src='https://saigoncacanh.com/wp-content/uploads/2023/11/logo-sai-gon-ca-canh-e1780211444314.png';" style="max-width:100%;max-height:100%;object-fit:contain;" alt="${title}">
             </div>
-            <div style="padding:10px;">
-              <strong style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.3;margin-bottom:6px;color:#333;">${title}</strong>
-              <div style="color:#d9534f;font-weight:bold;font-size:14px;margin-bottom:8px;">${price}</div>
-              <div style="background:linear-gradient(135deg, #0073aa, #00a0d2);color:#fff;text-align:center;padding:8px;border-radius:6px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">🛒 XEM TRÊN GIAN HÀNG</div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+              <strong style="font-size:12px;color:#ffffff;line-height:1.3;font-weight:600;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${title}</strong>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                <span style="color:#00c8ff;font-weight:700;font-size:13px;white-space:nowrap;">${price}</span>
+                <span style="background:linear-gradient(135deg,#0073aa,#00c8ff);color:#ffffff;padding:4px 8px;border-radius:6px;font-weight:700;font-size:10px;text-transform:uppercase;white-space:nowrap;letter-spacing:0.5px;">🛒 MUA NGAY</span>
+              </div>
             </div>
           </a>
         </div>`;
     });
-
-  // Bọc các card liên tiếp vào container trượt ngang Carousel
-  formatted = formatted.replace(/(<div class="sgcc-card-item"[\s\S]*?<\/div>\s*)+/g, (match) => {
-    return `<div style="display:flex;gap:10px;overflow-x:auto;padding:8px 2px;margin:8px 0;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">${match}</div>`;
-  });
 
   formatted = formatted
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank">$1</a>')

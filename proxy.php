@@ -577,7 +577,29 @@ if ($is_bearer) {
     ];
 }
 
-// ── TẦNG 2: CLOUD MICRO SLM (CLOUDFLARE WORKERS AI FREE TIER 300MS) ──
+// ── 1. GỌI BỘ NÃO CHÍNH GEMINI 2.0 FLASH-LITE (PHONG CÁCH THỢ CÁ SÀI GÒN 15+ NĂM) ──
+$ch = curl_init($gemini_url);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => json_encode($data),
+    CURLOPT_HTTPHEADER     => $headers,
+    CURLOPT_TIMEOUT        => 12
+]);
+
+$response = curl_exec($ch);
+$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curl_err = curl_error($ch);
+curl_close($ch);
+
+// Nếu Gemini trả về kết quả thành công 200, xuất ngay cho khách
+if ($response !== false && $http_code === 200 && stripos($response, 'candidates') !== false && stripos($response, 'error') === false) {
+    http_response_code(200);
+    echo $response;
+    exit();
+}
+
+// ── 2. DỰ PHÒNG CHUYỂN TIẾP (FALLBACK TẦNG 2): CLOUDFLARE WORKER SLM 300MS ──
 $cf_worker_url = 'https://sgcc-slm.cacanhsaigon246.workers.dev';
 if (!empty($cf_worker_url) && !empty($question)) {
     $cf_ch = curl_init($cf_worker_url);
@@ -586,7 +608,7 @@ if (!empty($cf_worker_url) && !empty($question)) {
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode(['question' => $question]),
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT        => 3
+        CURLOPT_TIMEOUT        => 4
     ]);
     $cf_res = curl_exec($cf_ch);
     $cf_code = curl_getinfo($cf_ch, CURLINFO_HTTP_CODE);
@@ -606,26 +628,6 @@ if (!empty($cf_worker_url) && !empty($question)) {
             exit();
         }
     }
-}
-
-$ch = curl_init($gemini_url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => json_encode($data),
-    CURLOPT_HTTPHEADER     => $headers,
-    CURLOPT_TIMEOUT        => 15
-]);
-
-$response = curl_exec($ch);
-$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curl_err = curl_error($ch);
-curl_close($ch);
-
-if ($response === false) {
-    http_response_code(500);
-    echo json_encode(['error' => "cURL error: " . $curl_err], JSON_UNESCAPED_UNICODE);
-    exit();
 }
 
 if ($http_code === 429 || stripos($response, 'RESOURCE_EXHAUSTED') !== false || stripos($response, 'quota') !== false) {

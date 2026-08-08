@@ -96,6 +96,7 @@
         border-radius: 0;
       }
       #sgcc-widget-btn { bottom: 16px; right: 16px; }
+      #sgcc-widget-btn.open { display: none !important; }
       #sgcc-tooltip { right: 80px; bottom: 80px; }
     }
   `;
